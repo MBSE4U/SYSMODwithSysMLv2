@@ -17,7 +17,7 @@ library package SYSMOD {
     /*
      * Definition of SYSMOD Concepts
      *
-
+     */
     part def ProjectContext :> SystemContext {
         doc /*
              * The Project Context includes the system problem statement and corresponding stakeholders,
