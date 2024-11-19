@@ -17,15 +17,22 @@ library package SYSMOD {
     /*
      * Definition of SYSMOD Concepts
      *
+     * Version 1.0beta 
+     *
+     * Copyright 2024, MBSE4U
+     *
      */
     part def ProjectContext :> SystemContext {
         doc /*
              * The Project Context includes the system problem statement and corresponding stakeholders,
              * the initial version of the system of interest and potential system actors.
              */
-        requirement problemStatement : ProblemStatement;
-        part stakeholders[*] : Stakeholder;
+        requirement problemStatement : ProblemStatement {
+            subject :>> systemOfInterest;
+        }
+        part stakeholders[1..*] : Stakeholder;
     }
+    part projectContexts[*] : ProjectContext;
 
     part def SystemContext {
         doc /*
@@ -34,8 +41,8 @@ library package SYSMOD {
              */
         part actors[*];
         part systemOfInterest;
-        connection systemActorConnection[*] connect actors to systemOfInterest;
     }
+    part systemContexts[*] : SystemContext;
 
     part def Stakeholder {
         doc /*
@@ -46,7 +53,14 @@ library package SYSMOD {
         attribute contact : ScalarValues::String;
         attribute categories[*] : StakeholderCategoryKind;
     }
-    alias PriorityKind for RiskMetadata::LevelEnum;
+    part stakeholders[*] : Stakeholder;
+    enum def PriorityKind :> ScalarValues::Real {
+        none = 0.0;
+        low = 0.25;
+        medium = 0.5;
+        high = 0.75;
+        critial = 1.0;
+    }
     enum def StakeholderCategoryKind {
         Expert;
         RequirementOwner;
@@ -59,8 +73,27 @@ library package SYSMOD {
              * The problem that is to be solved by the system.
              */
         assert constraint {
-            not (subj istype Base::Anything) and
             SequenceFunctions::size(stakeholders) > 0 
         }
     }
+    requirement problemStatements[*] : ProblemStatement;
+
+
+    //
+    // Semantic Metadata
+    //
+    metadata def <projectContext> ProjectContextMetadata :> Metaobjects::SemanticMetadata {
+        :>> baseType = projectContexts meta SysML::PartUsage;
+    }   
+    metadata def <systemContext> SystemContextMetadata :> Metaobjects::SemanticMetadata {
+        :>> baseType = systemContexts meta SysML::PartUsage;
+    }   
+    metadata def <extStakeholder> StakeholderMetadata :> Metaobjects::SemanticMetadata {
+        :>> baseType = extStakeholder meta SysML::PartUsage;
+    }   
+    metadata def <problemStatement> ProblemStatementMetadata :> Metaobjects::SemanticMetadata {
+        :>> baseType = problemStatements meta SysML::RequirementUsage;
+    }   
+
+
 }

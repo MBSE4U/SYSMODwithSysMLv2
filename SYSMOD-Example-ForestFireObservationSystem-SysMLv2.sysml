@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 package <FFDS_MODEL> ForestFireObservationSystemModel {
     doc /* SysML v2 SYSMOD Example of a Forest Fire Observation System
          * 
          * The purpose of this example is demonstrating the application of SYSMOD using SysML v2
          * 
+         * Version 1.0beta 
+         *
          * Copyright 2024, MBSE4U
          */
 
@@ -41,37 +42,36 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
              * Definition of the project context of the Forest Fire Observation System. 
              */
 
-        part <ffds> forestFireDetectionSystem : ForestFireDetectionSystem :> systemOfInterest;
-        part forests[*] : FFDS_BA_PKG::Actors::Forest :> actors {
-            doc /* All forests to be monitored by the forest fire detection system. */
+        part <ffds> forestFireDetectionSystem : ForestFireDetectionSystem :>> systemOfInterest;
+        part forest : FFDS_BA_PKG::Actors::Forest :> actors {
+            doc /* Forest to be monitored by the forest fire detection system. */
         }
-        connection ffdsForestsConnection :> systemActorConnection connect forests to ffds  {
-            doc /* Abstract connection between the forests and the forest fire detection system. */
+        connection ffdsForestsConnection connect forest to ffds  {
+            doc /* Abstract connection between the forest and the forest fire detection system. */
             assert constraint {
-                QuantityCalculations::sum(forests.area) <= ffds.maxForestAreaCovered
+                QuantityCalculations::sum(forest.area) <= ffds.maxForestAreaCovered
             }
         }
 
-        requirement problemStatement :> problemStatement {
+        requirement :>> problemStatement  {
             doc /*
                  * How can forest authorities effectively monitor extensive and ecologically 
                  * diverse forest regions spanning at least 2,500,000 square kilometers? 
                  * The solution should enable early fire detection to protect human lives, 
-                 * reduce environmental impact, and support long-term sustainability of forest ecosystems. 
-                 * As a company specializing in forest fire detection systems, we aim to design a 
+                 * reduce environmental impact and support the long-term sustainability of forest ecosystems. 
+                 * How can a company specializing in forest fire detection systems, aim to design a 
                  * solution that is adaptable, scalable, and eco-friendly. The system must address the 
                  * unique needs of various forest types and sizes, ensuring reliability, rapid response, 
                  * and ease of integration for diverse stakeholders. By prioritizing sustainable forest management, 
                  * our system will empower authorities and communities to safeguard forests and contribute 
-                 * to global environmental resilience.                 */
-            subject ffds : ForestFireDetectionSystem;
-            stakeholder :> ceoFFDS;
-            stakeholder :> forestAuthority;
+                 * to global environmental resilience.                 
+                 */
+            stakeholder theCEO = ceoFFDS;
+            stakeholder theForestAuthority = forestAuthority;
             require constraint {
                 ffds.maxForestAreaCovered >= 2500000 [SI::'m²']
             }
         }
-        satisfy problemStatement by ffds;            
 
         part ceoFFDS :> stakeholders {
             doc /*
@@ -84,7 +84,6 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
             attribute :>> effort = SYSMOD::PriorityKind::medium;
             attribute :>> categories = (SYSMOD::StakeholderCategoryKind::RequirementOwner);
         }
-
         part forestAuthority :> stakeholders {
             doc /*
                 * Forest authorities are responsible for managing and conserving forested areas.
@@ -97,7 +96,6 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
             attribute :>> categories = (SYSMOD::StakeholderCategoryKind::RequirementOwner, 
                                         SYSMOD::StakeholderCategoryKind::User);
         }
-
         part environmentalAgency :> stakeholders {
             doc /*
                 * Environmental agencies work to protect and sustain the natural environment.
@@ -109,7 +107,6 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
             attribute :>> categories = (SYSMOD::StakeholderCategoryKind::RequirementOwner, 
                                         SYSMOD::StakeholderCategoryKind::Expert);
         }
-
         part localCommunities :> stakeholders {
             doc /*
                 * Local communities residing near or within forested areas are directly affected by
@@ -121,7 +118,6 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
             attribute :>> categories = (SYSMOD::StakeholderCategoryKind::User, 
                                         SYSMOD::StakeholderCategoryKind::Other);
         }
-
         part emergencyResponseTeams :> stakeholders {
             doc /*
                 * Emergency response teams, including firefighters and first responders, require
@@ -133,7 +129,6 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
             attribute :>> categories = (SYSMOD::StakeholderCategoryKind::User, 
                                         SYSMOD::StakeholderCategoryKind::Expert);
         }
-
         part technologyProviders :> stakeholders {
             doc /*
                 * Technology providers develop and supply essential hardware and software components
@@ -145,7 +140,6 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
             attribute :>> categories = (SYSMOD::StakeholderCategoryKind::Expert, 
                                         SYSMOD::StakeholderCategoryKind::Other);
         }
-
         part policyMakers :> stakeholders {
             doc /*
                 * Policy makers influence regulations and guidelines for forest management and
@@ -157,7 +151,6 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
             attribute :>> categories = (SYSMOD::StakeholderCategoryKind::RequirementOwner, 
                                         SYSMOD::StakeholderCategoryKind::Other);
         }
-
         part insuranceCompanies :> stakeholders {
             doc /*
                 * Insurance companies are interested in the system's impact on reducing fire risks
@@ -168,7 +161,6 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
             attribute :>> effort = SYSMOD::PriorityKind::medium;
             attribute :>> categories = (SYSMOD::StakeholderCategoryKind::Other);
         }
-
         part dataScientists :> stakeholders {
             doc /*
                 * Data scientists analyze and interpret data collected by the system, developing
@@ -179,7 +171,6 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
             attribute :>> effort = SYSMOD::PriorityKind::high;
             attribute :>> categories = (SYSMOD::StakeholderCategoryKind::Expert);
         }
-
         part sustainabilityExperts :> stakeholders {
             doc /*
                 * Sustainability experts ensure that the system aligns with environmental sustainability goals,
@@ -190,7 +181,6 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
             attribute :>> effort = SYSMOD::PriorityKind::medium;
             attribute :>> categories = (SYSMOD::StakeholderCategoryKind::Expert);
         }
-
         part financialAnalysts :> stakeholders {
             doc /*
                 * Financial analysts assess the economic viability of the detection system, focusing on costs,
@@ -205,15 +195,17 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
 
     part def <FFDS> ForestFireDetectionSystem {
         doc /* Entry point of the Project: Goal is to develop a Forest Fire Detection System */
-        attribute maxForestAreaCovered :> ISQ::area {
+        private import ParametersOfInterestMetadata::*;
+
+        #moe attribute maxForestAreaCovered :> ISQ::area {
            doc /* Maximum area that can be monitored by the FFDS. */
         }
 
-        attribute minSizeOfFire :> ISQ::area {
+        #moe attribute minSizeOfFire :> ISQ::area {
             doc /* Minimum size of fire that is detected by the system. */
         }
 
-        attribute timeFromDetectionToNotification :> ISQ::duration {
+        #moe attribute timeFromDetectionToNotification :> ISQ::duration {
            doc /* Time from Detecting a potential fire until notification. */
         }
     }
@@ -225,12 +217,12 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
             doc /* Definition of the Base System Context of the Forest Fire Detection System */
             
             part <ffds> forestFireDetectionSystem : FFDS :> FFDS_MODEL::ffds_pc.ffds;
-            part forests[*] :> ffds_pc.forests;
+            part forest :> ffds_pc.forest;
             part fires[*] : Actors::Fire;
             part fireDepartments[*] : Actors::FireDepartment;
             part operators[*] : Actors::Operator;
 
-            connect forests to ffds;
+            connect forest to ffds;
             interface fires.firePort to ffds.fireDetectionPort;
             interface fireDepartments.fireAlertPort to ffds.fireAlertPort;
             interface operators.operatorPort to ffds.operatorPort;
@@ -240,6 +232,60 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
             port fireDetectionPort;
             port fireAlertPort;
             port operatorPort;
+
+            part observationStation;
+            part satellites[*];
+            connection obsStation2Satellites connect observationStation to satellites;
+
+            part controlCenter;
+            connection control2Satellites connect controlCenter to satellites;
+            connection control2Observation connect controlCenter to observationStation;
+
+            part sensorNetwork {
+                part thermalSensors[*];
+                part smokeDetectors[*];
+                part humiditySensors[*];
+                part windSensors[*];
+            }
+            connection sensors2Observation connect sensorNetwork to observationStation;
+
+            part dataProcessingUnit {
+                part aiAlgorithm;
+                part dataStorage;
+            }
+            connection control2DataProcessing connect controlCenter to dataProcessingUnit;
+
+            part communicationNetwork {
+                part wirelessTransmitters[*];
+                part relayStations[*];
+                part satelliteLink;
+            }
+            connection communication2Control connect communicationNetwork to controlCenter;
+            connection communication2Sensors connect communicationNetwork to sensorNetwork;
+
+            part userInterface {
+                part operatorConsole;
+                part mobileApp;
+                part webPortal;
+            }
+            connection interface2Control connect userInterface to controlCenter;
+
+            part powerSupplySystem {
+                part solarPanels[*];
+                part backupBattery[*];
+            }
+            connection power2Observation connect powerSupplySystem to observationStation;
+            connection power2Sensors connect powerSupplySystem to sensorNetwork;
+
+            part maintenanceSystem {
+                part diagnosticTools;
+                part alertManagement;
+            }
+            connection maintenance2Control connect maintenanceSystem to controlCenter;
+            connection maintenance2Sensors connect maintenanceSystem to sensorNetwork;
+
+            part weatherForecastIntegration;
+            connection weather2DataProcessing connect weatherForecastIntegration to dataProcessingUnit;
         }
 
         package Actors {
@@ -263,9 +309,6 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
                 port operatorPort;
             }
         }
-
-        package <UC> UseCases {
-        }
     }
  
     package <FFDS_UC_PKG> ForestFireDetectionSystemUseCases {
@@ -278,12 +321,16 @@ package <FFDS_MODEL> ForestFireObservationSystemModel {
 
     package <FFDS_RE_PKG> ForestFireDetectionSystemRequirements {
 
+        package <FFDS_SC_PKG> ForestFireDetectionSystemContext {
+
+            part def <FFDS_SC> ForestFireDetectionSystemContext :> FFDS_BA_PKG::ForestFireDetectionSystemBaseContext {
+                part :>> ffds : FFDS_RE;
+                satisfy FFDS_MODEL::ffds_pc.problemStatement by ffds;            
+            }
+            part def <FFDS_RE> ForestFireDetectionSystem :> FFDS_BA_PKG::ForestFireDetectionSystem;
+        }
     }
 
-    package <FFDS_SC_PKG> ForestFireDetectionSystemContext {
-
-        part def <FFDS_SC> ForestFireDetectionSystemContext :> SYSMOD::SystemContext;
-    }
 
     package <FFDS_SA_PKG> ForestFireDetectionSystemLogicalArchitecture {
         part def <FFDS> ForestFireDetectionSystem :> FFDS_BA_PKG::ForestFireDetectionSystem;
