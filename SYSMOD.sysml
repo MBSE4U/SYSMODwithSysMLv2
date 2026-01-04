@@ -1,117 +1,80 @@
-//
-// Library SYSMOD - The Systems Modeling Toolbox
-//
-// The library provides concepts of the common and general purpose MBSE methodology SYSMOD.
-// 
-// Version: v5.0alpha (v4.x are SYSMOD for SysML v1 versions); work in progress
-// License: Apache-2.0
-// Maintainer: MBSE4U, Tim Weilkiens, Contact: tim@mbse4u.com
-// Website: https://mbse4u.com/sysmod
-// Topic: MBSE, Methodology
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// Copyright 2025 MBSE4U
-//
 library package SYSMOD {
-    doc
-    /*
-     * Definition of SYSMOD Concepts for SysML v2
+    doc 
+    /* Definition of SYSMOD Concepts for SysML v2
      *
-     * Version v5.0alpha 
+     * Version v5.1alpha 
+     *
+     * Licensed under the Apache License, Version 2.0 (the "License");
+     * you may not use this file except in compliance with the License.
+     * You may obtain a copy of the License at
+     *
+     * http://www.apache.org/licenses/LICENSE-2.0
+     *
+     * Unless required by applicable law or agreed to in writing, software
+     * distributed under the License is distributed on an "AS IS" BASIS,
+     * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     * See the License for the specific language governing permissions and
+     * limitations under the License.
      *
      * Copyright 2025, MBSE4U
      *
      */
-    abstract occurrence def Project {
-        doc /* The Project provides the context for the main engineering artifacts and builds the cross relationships. */
-
-        //
-        // Level -1
-        //
-
-        // Problem Space
-        requirement problemStatement : ProblemStatement {
-            subject :>> baseSystemContext.systemOfInterest;
+    occurrence def Project {
+        doc 
+        /* The Project provides the context for the main engineering artifacts 
+         * and sets cross relationships. */
+        part brownfieldSystemContext : SystemContext;
+        part projectStakeholders [1..*] : Stakeholder;
+        requirement problemStatement {
+            subject system :> brownfieldSystemContext.soi;
         }
-        part stakeholders[1..*] : Stakeholder;
-
-        requirement requirementSpecification : ExtendedRequirement {
-            subject :>> systemContext.systemOfInterest;
-            require problemStatement;
+        part systemIdeaContext :> brownfieldSystemContext {
+            part <soi> systemOfInterest :>> soi {
+                satisfy problemStatement;
+            }
         }
-
-        // Solution Space
-        part baseSystemContext : SystemContext;
-        satisfy requirementSpecification by baseSystemContext.systemOfInterest;
-
-        //
-        // Level 0
-        //
-
-        // Problem Space
-        part requirementSystemContext :> systemContext;
-        requirement systemRequirementSpecification :> requirementSpecification {
-            subject :>> requirementSystemContext.systemOfInterest;
+        part requirementSystemContext :> systemIdeaContext;
+        requirement systemRequirementSpecification {
+            subject system :> requirementSystemContext.soi;
         }
-
-        // Solution Space
-        part systemContext :> baseSystemContext;
-        satisfy systemRequirementSpecification by systemContext.systemOfInterest;
+        #RequirementDerivation::derivation connection {
+            end #RequirementDerivation::original ::> problemStatement;
+            end #RequirementDerivation::derive ::> systemRequirementSpecification;
+        }
+        part systemContext :> requirementSystemContext {
+            part <soi> systemOfInterest :>> soi {
+                satisfy systemRequirementSpecification;
+            }
+        }
+        part functionalContext :> systemContext;
+        part logicalContext :> systemContext;
+        part productContext :> systemContext;
     }
-    occurrence projects[*] : Project;
-
-    abstract part def SystemContext {
-        doc /*
-             * The System Context includes all system actors, the system of interest, 
-             * and the relationships between the actors and the system.
-             */
-        part actors[*];
-        part systemOfInterest : SystemPart;
+    occurrence projects [*] nonunique : Project;
+    part def SystemContext {
+        doc 
+        /* The System Context includes all system actors, the system of interest, 
+         * and the relationships between the actors and the system.
+         */
+        part actors [1..*];
+        part <soi> systemOfInterest;
+        connection act2sys [1..*] {
+            end [1] part 'actor' ::> actors;
+            end [1] part soi ::> soi;
+        }
+        use case useCases [0..*] {
+            subject theSubject :> soi;
+        }
     }
-    part systemContexts[*] : SystemContext;
-
-    abstract part def SystemPart {
-        attribute maturity : MaturityKind default initial;
-        attribute totalMaturity = (RealFunctions::sum(systemParts.maturity) + maturity) 
-                                / (CollectionFunctions::size(systemParts) + 1);
-        part systemParts[*] :SystemPart :> subparts;
-    }
-    part systemParts[*] : SystemPart;
-
-    abstract part def MechanicalPart :> SystemPart;
-    part mechanicalParts[*] : MechanicalPart :> systemParts;
-    abstract part def ElectricalPart :> SystemPart;
-    part electricalParts[*] : ElectricalPart :> systemParts;
-    abstract part def SoftwarePart :> SystemPart;
-    part softwareParts[*] : SoftwarePart :> systemParts;
-
-    enum def MaturityKind :> ScalarValues::Real {
-        final = 1;
-        complete = 0.75;
-        inProgress = 0.5;
-        started = 0.25;
-        initial = 0;
-    }
-
-    abstract part def Stakeholder {
+    part systemContexts [*] nonunique : SystemContext;
+    part def Stakeholder {
         doc /* SYSMOD-specific definition of the stakeholder concept */
         attribute risk : PriorityKind;
         attribute effort : PriorityKind;
         attribute contact : ScalarValues::String;
-        attribute categories[*] : StakeholderCategoryKind;
+        attribute categories [*] : StakeholderCategoryKind;
     }
-    part stakeholders[*] : Stakeholder;
+    part stakeholders [*] nonunique : Stakeholder;
     enum def PriorityKind :> ScalarValues::Real {
         none = 0.0;
         low = 0.25;
@@ -125,79 +88,34 @@ library package SYSMOD {
         User;
         Other;
     }
-
-    abstract requirement def ProblemStatement {
-        doc /* The problem that is to be solved by the system. */
-        assert constraint {
-            SequenceFunctions::size(stakeholders) > 0 
-        }
+    requirement def SystemObjective {
+        doc 
+        /* A goal that the system is aiming for. It does not have to be satisfied, 
+         * but an evaluation must show that the system has brought the objective closer. 
+         * Of course, it may also be satisfied.
+         */
     }
-    requirement problemStatements[*] : ProblemStatement;
-
-    abstract requirement def SystemObjective {
-        doc /*
-             * A goal that the system is aiming for. It does not have to be satisfied, 
-             * but an evaluation must show that the system has brought the objective closer. 
-             * Of course, it may also be satisfied.
-             */
-    }
-    requirement systemObjectives[*] : SystemObjective;
-
-    abstract requirement def ExtendedRequirement {
-        // tbd
-    }
-    requirement extendedRequirements[*] : ExtendedRequirement;
-}
-
-library package SYSMOD_Metadata {
-
-    private import SYSMOD::*;
-    //
-    // Semantic Metadata
-    //
+    requirement systemObjectives [*] : SystemObjective;
+    concern def ExtendedConcern;
+    concern extendedConcerns [*] nonunique : ExtendedConcern;
+    requirement def ExtendedRequirement :> ExtendedConcern;
+    requirement extendedRequirements [*] nonunique : ExtendedRequirement;
     metadata def <project> ProjectContextMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = projects meta SysML::PartUsage;
-    }   
+        :>> baseType = projects meta SysML::Systems::OccurrenceUsage;
+    }
     metadata def <systemContext> SystemContextMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = systemContexts meta SysML::PartUsage;
-    }   
-    metadata def <systemPart> SystemPartMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = systemParts meta SysML::PartUsage;
-    }
-    metadata def <mechanicalPart> MechanicalPartMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = mechanicalParts meta SysML::PartUsage;
-    }
-    metadata def <electricalPart> ElectricalPartMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = electricalParts meta SysML::PartUsage;
-    }
-    metadata def <softwarePart> SoftwarePartMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = softwareParts meta SysML::PartUsage;
+        :>> baseType = systemContexts meta SysML::Systems::PartUsage;
     }
     metadata def <exStakeholder> StakeholderMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = stakeholders meta SysML::PartUsage;
-    }   
-    metadata def <problemStatement> ProblemStatementMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = problemStatements meta SysML::RequirementUsage;
-    }   
+        :>> baseType = stakeholders meta SysML::Systems::PartUsage;
+    }
     metadata def <systemObjective> SystemObjectiveMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = systemObjectives meta SysML::RequirementUsage;
-    }   
+        :>> baseType = systemObjectives meta SysML::Systems::RequirementUsage;
+    }
+    metadata def <extendedConcern> ExtendedConcernMetadata :> Metaobjects::SemanticMetadata {
+        :>> baseType = extendedConcerns meta SysML::Systems::RequirementUsage;
+    }
     metadata def <extendedRequirement> ExtendedRequirementMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = extendedRequirements meta SysML::RequirementUsage;
-    }
-}
-
-package SYSMOD_Process {
-
-    action def 'Standard SYSMOD Process' {
-        first start;
-        then action analyzeTheProblem : 'Analyze the Problem';
-    }
-    action def 'Analyze the Problem' {
-        out requirement problemStatement : SYSMOD::ProblemStatement;
-    }
-    action def 'Specify the System Idea and System Objectives' {
-        out part systemIdea;
-        out requirement systemObjectives[*];
+        :>> baseType = extendedRequirements meta SysML::Systems::RequirementUsage;
     }
 }

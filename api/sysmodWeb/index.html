@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!--
+Copyright 2025 Tim Weilkiens
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SysML v2 API - SYSMOD Demonstrator</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            /* Indigo 600 */
+            --primary-hover: #4338ca;
+            /* Indigo 700 */
+            --background-color: #f3f4f6;
+            /* Gray 100 */
+            --surface-color: #ffffff;
+            --text-color: #1f2937;
+            /* Gray 800 */
+            --text-secondary: #6b7280;
+            /* Gray 500 */
+            --border-color: #d1d5db;
+            /* Gray 300 */
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --font-family: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #374151;
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+
+        .section {
+            background-color: var(--surface-color);
+            padding: 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            border: 1px solid #e5e7eb;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-family: var(--font-family);
+            color: var(--text-color);
+            background-color: #fff;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            margin-bottom: 1rem;
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-family: var(--font-family);
+            transition: background-color 0.15s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .result-display {
+            font-weight: 600;
+            color: var(--primary-color) !important;
+            background-color: #eef2ff;
+            padding: 12px;
+            border-radius: var(--radius);
+            border: 1px solid #c7d2fe;
+            margin-top: 10px;
+        }
+
+        pre {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: var(--radius);
+            border: 1px solid #e5e7eb;
+            overflow-x: auto;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+
+        /* D3 Graph Styles */
+        #graphical_tree {
+            margin-top: 20px;
+        }
+
+        .node circle {
+            fill: #fff;
+            stroke: var(--primary-color);
+            stroke-width: 2px;
+        }
+
+        .node text {
+            font: 12px sans-serif;
+            fill: var(--text-color);
+        }
+
+        .link {
+            fill: none;
+            stroke: #9ca3af;
+            stroke-width: 1.5px;
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 640px) {
+            button {
+                width: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>SysML v2 API - SYSMOD Demonstrator</h1>
+
+        <!-- Server URL Section -->
+        <div class="section">
+            <label for="server_url">SysML v2 Repository Server URL</label>
+            <input type="text" id="server_url" placeholder="Enter server URL (e.g., http://example.com)" />
+            <button onclick="queryProjects()">Get Projects</button>
+        </div>
+
+        <!-- Projects Section -->
+        <div class="section" id="projects_section" style="display: none;">
+            <h2>Select Project</h2>
+            <label for="project_list">Available Projects</label>
+            <select id="project_list" onchange="storeSelectedProjectId()">
+                <option value="">-- Select a Project --</option>
+            </select>
+
+            <div style="margin-top: 1.5rem; border-top: 1px solid #e5e7eb; padding-top: 1.5rem;">
+                <label for="manual_project_id">Or manually enter Project ID</label>
+                <input type="text" id="manual_project_id" placeholder="Enter Project ID manually"
+                    oninput="storeManualProjectId()" />
+            </div>
+
+            <p id="selected_project_display" class="result-display" style="display: none;"></p>
+        </div>
+
+        <!-- Commits Section -->
+        <div class="section" id="commits_section" style="display: none;">
+            <h2>Select Commit</h2>
+            <label for="commit_list">Available Commits</label>
+            <select id="commit_list" onchange="storeSelectedCommitId()">
+                <option value="">-- Select a Commit --</option>
+            </select>
+            <p id="commit_error_message"
+                style="display: none; color: #dc2626; background-color: #fee2e2; border: 1px solid #fecaca; padding: 12px; border-radius: 8px; margin-top: 10px; font-weight: 600;">
+            </p>
+            <p id="selected_commit_display" class="result-display" style="display: none;"></p>
+            <p id="loading_indicator"
+                style="display: none; color: var(--primary-color); font-weight: 500; text-align: center; margin-top: 1rem;">
+                Loading...</p>
+        </div>
+
+        <!-- SYSMOD Projects Section -->
+        <div class="section" id="sysmodProjects_section" style="display: none;">
+            <h2>Select SYSMOD Project</h2>
+            <label for="sysmod_project_list">Available SYSMOD Projects</label>
+            <select id="sysmod_project_list" onchange="storeSelectedSYSMODProjectId()">
+                <option value="">-- Select a SYSMOD Project --</option>
+            </select>
+            <p id="selected_sysmod_project_display" class="result-display" style="display: none;"></p>
+        </div>
+    </div>
+
+    <script>
+
+        async function queryProjects() {
+            const serverUrl = document.getElementById('server_url').value;
+            const projectList = document.getElementById('project_list');
+            const projectsSection = document.getElementById('projects_section');
+
+            projectList.innerHTML = '<option value="">-- Select a Project --</option>';
+            projectsSection.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/projects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ server_url: serverUrl })
+                });
+
+                if (response.ok) {
+                    const projects = await response.json();
+                    projects.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project['@id'];
+                        option.text = `${project.name || project['@id']} (${project.created})`;
+                        projectList.appendChild(option);
+                    });
+                    projectsSection.style.display = 'block';
+                } else {
+                    alert('Failed to retrieve projects');
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        function storeSelectedProjectId() {
+            const projectId = document.getElementById('project_list').value;
+            const display = document.getElementById('selected_project_display');
+            display.textContent = `Selected Project ID: ${projectId}`;
+            display.style.display = 'block';
+            queryCommits();
+        }
+
+        function storeManualProjectId() {
+            const projectId = document.getElementById('manual_project_id').value;
+            const display = document.getElementById('selected_project_display');
+            display.textContent = `Selected Project ID: ${projectId}`;
+            display.style.display = projectId ? 'block' : 'none';
+            if (projectId) queryCommits();
+        }
+
+        async function queryCommits() {
+            const serverUrl = document.getElementById('server_url').value;
+            const projectId = document.getElementById('project_list').value || document.getElementById('manual_project_id').value;
+            const commitList = document.getElementById('commit_list');
+            const commitsSection = document.getElementById('commits_section');
+            const errorMessage = document.getElementById('commit_error_message');
+
+            commitList.innerHTML = '<option value="">-- Select a Commit --</option>';
+            errorMessage.style.display = 'none';
+            commitsSection.style.display = 'none';
+
+            if (!projectId) return;
+
+            try {
+                const response = await fetch('/api/commits', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ server_url: serverUrl, project_id: projectId })
+                });
+
+                if (response.ok) {
+                    const commits = await response.json();
+
+                    if (commits.length === 0) {
+                        errorMessage.textContent = 'No commits found for this project.';
+                        errorMessage.style.display = 'block';
+                        commitsSection.style.display = 'block';
+                    } else {
+                        commits.forEach(commit => {
+                            const option = document.createElement('option');
+                            option.value = commit['@id'];
+                            option.text = (commit.name || commit['@id']) + " / created: " + commit['created'];
+                            commitList.appendChild(option);
+                        });
+                        commitsSection.style.display = 'block';
+                    }
+                } else {
+                    errorMessage.textContent = 'Failed to retrieve commits. Server returned error.';
+                    errorMessage.style.display = 'block';
+                    commitsSection.style.display = 'block';
+                }
+            } catch (error) {
+                errorMessage.textContent = `Error: ${error.message}`;
+                errorMessage.style.display = 'block';
+                commitsSection.style.display = 'block';
+            }
+        }
+
+
+        async function storeSelectedCommitId() {
+            const commitId = document.getElementById('commit_list').value;
+            const display = document.getElementById('selected_commit_display');
+            display.textContent = `Selected Commit ID: ${commitId}`;
+            display.style.display = 'block';
+
+            // Show loading indicator
+            const loadingIndicator = document.getElementById('loading_indicator');
+            loadingIndicator.style.display = 'block';
+            document.getElementById('sysmodProjects_section').style.display = 'none';
+
+            if (commitId) {
+                loadingIndicator.textContent = "Loading Model Cache...";
+                try {
+                    const serverUrl = document.getElementById('server_url').value;
+                    const projectId = document.getElementById('project_list').value || document.getElementById('manual_project_id').value;
+
+                    const response = await fetch('/api/cache/warmup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ server_url: serverUrl, project_id: projectId, commit_id: commitId })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log(`Cache warmed up: ${result.cached_elements} elements.`);
+                    } else {
+                        console.error("Failed to warm up cache");
+                    }
+                } catch (e) {
+                    console.error("Error warming up cache:", e);
+                }
+                loadingIndicator.textContent = "Loading Projects...";
+            }
+
+            querySYSMODProjects();
+        }
+
+        async function querySYSMODProjects() {
+            const serverUrl = document.getElementById('server_url').value;
+            const projectId = document.getElementById('project_list').value || document.getElementById('manual_project_id').value;
+            const commitId = document.getElementById('commit_list').value;
+            const sysmodProjectsSection = document.getElementById('sysmodProjects_section');
+            const loadingIndicator = document.getElementById('loading_indicator');
+            const projectList = document.getElementById('sysmod_project_list');
+
+            if (!commitId) {
+                loadingIndicator.style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/smProjects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ server_url: serverUrl, project_id: projectId, commit_id: commitId })
+                });
+
+                if (response.ok) {
+                    const projects = await response.json();
+                    projectList.innerHTML = '<option value="">-- Select a SYSMOD Project --</option>'; // Clear previous options
+                    projects.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project['@id'];
+                        option.text = (project.name || project['@id']);
+                        projectList.appendChild(option);
+                    });
+                    sysmodProjectsSection.style.display = 'block';
+                } else {
+                    alert('Failed to retrieve SYSMOD projects');
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        function storeSelectedSYSMODProjectId() {
+            const serverUrl = document.getElementById('server_url').value;
+            const projectId = document.getElementById('project_list').value || document.getElementById('manual_project_id').value;
+            const commitId = document.getElementById('commit_list').value;
+            const smProjectId = document.getElementById('sysmod_project_list').value;
+
+            if (smProjectId) {
+                // Construct URL parameters to pass context to the new page
+                const params = new URLSearchParams({
+                    server_url: serverUrl,
+                    project_id: projectId,
+                    commit_id: commitId,
+                    sysmod_project_id: smProjectId
+                });
+
+                // Open project.html in the same tab (or new tab if preferred, but user said "open a new web page", usually implies navigation)
+                // "open a new web page" could mean window.open or location.href. 
+                // Given it's a "single-page web dashboard", navigation (location.href) feels more natural for a SPA feel, 
+                // but let's stick to standard navigation.
+                window.location.href = `project.html?${params.toString()}`;
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
