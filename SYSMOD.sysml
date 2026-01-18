@@ -1,5 +1,5 @@
 library package SYSMOD {
-    doc 
+    doc
     /* Definition of SYSMOD Concepts for SysML v2
      *
      * Version v5.1alpha 
@@ -17,14 +17,12 @@ library package SYSMOD {
      * limitations under the License.
      *
      * Copyright 2025, MBSE4U
-     *
      */
     occurrence def Project {
-        doc 
-        /* The Project provides the context for the main engineering artifacts 
-         * and sets cross relationships. */
+        doc
+        /* The Project provides the context for the main engineering artifacts and sets cross relationships. */
         part brownfieldSystemContext : SystemContext;
-        part projectStakeholders [1..*] : Stakeholder;
+        part projectStakeholders : Stakeholder [1..*];
         requirement problemStatement {
             subject system :> brownfieldSystemContext.soi;
         }
@@ -50,9 +48,9 @@ library package SYSMOD {
         part logicalContext :> systemContext;
         part productContext :> systemContext;
     }
-    occurrence projects [*] nonunique : Project;
+    occurrence projects : Project [*] nonunique;
     part def SystemContext {
-        doc 
+        doc
         /* The System Context includes all system actors, the system of interest, 
          * and the relationships between the actors and the system.
          */
@@ -66,15 +64,16 @@ library package SYSMOD {
             subject theSubject :> soi;
         }
     }
-    part systemContexts [*] nonunique : SystemContext;
+    part systemContexts : SystemContext [*] nonunique;
     part def Stakeholder {
-        doc /* SYSMOD-specific definition of the stakeholder concept */
+        doc
+        /* SYSMOD-specific definition of the stakeholder concept */
         attribute risk : PriorityKind;
         attribute effort : PriorityKind;
         attribute contact : ScalarValues::String;
-        attribute categories [*] : StakeholderCategoryKind;
+        attribute categories : StakeholderCategoryKind [*];
     }
-    part stakeholders [*] nonunique : Stakeholder;
+    part stakeholders : Stakeholder [*] nonunique;
     enum def PriorityKind :> ScalarValues::Real {
         none = 0.0;
         low = 0.25;
@@ -89,17 +88,17 @@ library package SYSMOD {
         Other;
     }
     requirement def SystemObjective {
-        doc 
+        doc
         /* A goal that the system is aiming for. It does not have to be satisfied, 
          * but an evaluation must show that the system has brought the objective closer. 
          * Of course, it may also be satisfied.
          */
     }
-    requirement systemObjectives [*] : SystemObjective;
+    requirement systemObjectives : SystemObjective [*];
     concern def ExtendedConcern;
-    concern extendedConcerns [*] nonunique : ExtendedConcern;
+    concern extendedConcerns : ExtendedConcern [*] nonunique;
     requirement def ExtendedRequirement :> ExtendedConcern;
-    requirement extendedRequirements [*] nonunique : ExtendedRequirement;
+    requirement extendedRequirements : ExtendedRequirement [*] nonunique;
     metadata def <project> ProjectContextMetadata :> Metaobjects::SemanticMetadata {
         :>> baseType = projects meta SysML::Systems::OccurrenceUsage;
     }
@@ -115,7 +114,8 @@ library package SYSMOD {
     metadata def <extendedConcern> ExtendedConcernMetadata :> Metaobjects::SemanticMetadata {
         :>> baseType = extendedConcerns meta SysML::Systems::RequirementUsage;
     }
-    metadata def <extendedRequirement> ExtendedRequirementMetadata :> Metaobjects::SemanticMetadata {
+    metadata def <extendedRequirement> ExtendedRequirementMetadata
+        :> Metaobjects::SemanticMetadata {
         :>> baseType = extendedRequirements meta SysML::Systems::RequirementUsage;
     }
 }
