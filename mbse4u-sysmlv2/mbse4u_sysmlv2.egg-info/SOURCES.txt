@@ -1,0 +1,8 @@
+README.md
+mbse4u_sysmlv2_api_helpers.py
+pyproject.toml
+mbse4u_sysmlv2.egg-info/PKG-INFO
+mbse4u_sysmlv2.egg-info/SOURCES.txt
+mbse4u_sysmlv2.egg-info/dependency_links.txt
+mbse4u_sysmlv2.egg-info/requires.txt
+mbse4u_sysmlv2.egg-info/top_level.txt

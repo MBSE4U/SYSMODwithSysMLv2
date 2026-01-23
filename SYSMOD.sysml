@@ -23,7 +23,7 @@ library package SYSMOD {
         /* The Project provides the context for the main engineering artifacts and sets cross relationships. */
         part brownfieldSystemContext : SystemContext;
         part projectStakeholders : Stakeholder [1..*];
-        requirement problemStatement {
+        concern problemStatement {
             subject system :> brownfieldSystemContext.soi;
         }
         part systemIdeaContext :> brownfieldSystemContext {
@@ -82,10 +82,10 @@ library package SYSMOD {
         critial = 1.0;
     }
     enum def StakeholderCategoryKind {
-        Expert;
-        RequirementOwner;
-        User;
-        Other;
+        expert;
+        requirementOwner;
+        user;
+        other;
     }
     requirement def SystemObjective {
         doc
@@ -93,12 +93,35 @@ library package SYSMOD {
          * but an evaluation must show that the system has brought the objective closer. 
          * Of course, it may also be satisfied.
          */
+
+        attribute priority : PriorityKind default priority.none;
     }
     requirement systemObjectives : SystemObjective [*];
-    concern def ExtendedConcern;
+    concern def ExtendedConcern {
+        attribute priority : PriorityKind default priority.none;
+    }
     concern extendedConcerns : ExtendedConcern [*] nonunique;
-    requirement def ExtendedRequirement :> ExtendedConcern;
+
+
+    enum def ObligationKind {
+        none;
+        mandatory;
+        optional;
+    }
+
+    enum def StabilityKind {
+        none;
+        instable;
+        stable;
+    }
+
+    requirement def ExtendedRequirement :> ExtendedConcern {
+        attribute obligation : ObligationKind default obligation.none;
+        attribute stability : StabilityKind default stability.none;
+        attribute motivation : ScalarValues::String;
+    }
     requirement extendedRequirements : ExtendedRequirement [*] nonunique;
+
     metadata def <project> ProjectContextMetadata :> Metaobjects::SemanticMetadata {
         :>> baseType = projects meta SysML::Systems::OccurrenceUsage;
     }
@@ -114,8 +137,7 @@ library package SYSMOD {
     metadata def <extendedConcern> ExtendedConcernMetadata :> Metaobjects::SemanticMetadata {
         :>> baseType = extendedConcerns meta SysML::Systems::RequirementUsage;
     }
-    metadata def <extendedRequirement> ExtendedRequirementMetadata
-        :> Metaobjects::SemanticMetadata {
+    metadata def <extendedRequirement> ExtendedRequirementMetadata :> Metaobjects::SemanticMetadata {
         :>> baseType = extendedRequirements meta SysML::Systems::RequirementUsage;
     }
 }

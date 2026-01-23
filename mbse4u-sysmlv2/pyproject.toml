@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mbse4u-sysmlv2"
+version = "0.1.0"
+description = "Generic SysML v2 API helpers from MBSE4U"
+authors = [
+  { name="Tim Weilkiens" },
+]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+  "requests",
+]
+
+[tool.setuptools]
+py-modules = ["mbse4u_sysmlv2_api_helpers"]

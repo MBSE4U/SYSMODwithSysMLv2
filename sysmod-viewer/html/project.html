@@ -1,0 +1,2999 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Dashboard - SYSMOD</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Mermaid.js -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'base', themeVariables: { fontFamily: 'Inter' } });
+        window.mermaid = mermaid;
+    </script>
+
+    <!-- SortableJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+    <!-- svg-pan-zoom -->
+    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            /* Slate 50 */
+        }
+
+        /* Draggable Handles */
+        section h2 {
+            cursor: grab;
+        }
+
+        section h2:active {
+            cursor: grabbing;
+        }
+
+        /* Glassmorphism utilities */
+        .glass {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.85);
+            /* Slate 900 */
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Gradient Border */
+        .gradient-border {
+            position: relative;
+            background: #fff;
+            background-clip: padding-box;
+            border: 2px solid transparent;
+            border-radius: 0.75rem;
+        }
+
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: -1;
+            margin: -2px;
+            border-radius: inherit;
+            background: linear-gradient(to right, #06b6d4, #4f46e5);
+            /* Cyan 500 to Indigo 600 */
+        }
+
+        /* Custom Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        /* Split View Styles */
+        .resizer {
+            background-color: #cbd5e1;
+            cursor: col-resize;
+            width: 4px;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .resizer:hover,
+        .resizer.resizing {
+            background-color: #6366f1;
+            /* Indigo 500 */
+        }
+
+        .split-container {
+            display: flex;
+            height: 600px;
+            /* Fixed height for now */
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .split-pane {
+            overflow: auto;
+            min-width: 0;
+            /* Allow shrinking below content size */
+        }
+
+        .delay-100 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-200 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-300 {
+            animation-delay: 0.3s;
+        }
+
+        .delay-400 {
+            animation-delay: 0.4s;
+        }
+
+        /* Hide scrollbar for clean horizontal scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.2);
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#4f46e5', // Indigo 600
+                            teal: '#06b6d4', // Cyan 500
+                            dark: '#0f172a', // Slate 900
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glow': '0 0 15px rgba(6, 182, 212, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+    <script>
+    </script>
+</head>
+
+<body class="text-slate-800 antialiased selection:bg-brand-teal selection:text-white">
+
+    <!-- Fancy Loading Overlay -->
+    <div id="loading_overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <h3 class="text-xl font-bold text-slate-800 tracking-tight">Loading View</h3>
+        <p class="text-slate-500 mt-2 animate-pulse">Rendering diagram...</p>
+    </div>
+
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass shadow-sm transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <img src="mbse4u_logo.png" alt="MBSE4U" class="h-10 mr-2">
+                    <div class="bg-gradient-to-tr from-brand-blue to-brand-teal p-2 rounded-lg text-white shadow-glow">
+                        <i data-lucide="box" class="w-6 h-6"></i>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight text-slate-900">SYSMOD<span
+                            class="text-brand-blue">Viewer</span></span>
+                </div>
+                <!-- Breadcrumbs / Context -->
+                <div
+                    class="hidden md:flex items-center space-x-2 text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                    <span>Repository</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    <span class="font-medium text-slate-700" id="repository_url">Project SkyLift</span>
+                </div>
+                <!-- Config Trigger & User Profile -->
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleConfigModal()"
+                        class="p-2 mr-2 text-slate-500 hover:text-brand-blue hover:bg-slate-100 rounded-lg transition-colors"
+                        title="Configuration">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                    </button>
+                    <div
+                        class="h-8 w-8 rounded-full bg-gradient-to-r from-slate-200 to-slate-300 border border-white shadow-sm overflow-hidden">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Tim" alt="User" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar / Settings Drawer -->
+    <div id="settings_drawer"
+        class="fixed right-0 top-20 bg-white/90 backdrop-blur-md shadow-lg border-l border-white/50 rounded-l-2xl p-4 transition-transform duration-300 z-40 translate-x-3/4 hover:translate-x-0 w-64 group">
+        <div class="absolute -left-10 top-2 bg-white p-2 rounded-l-lg shadow-md cursor-pointer group-hover:bg-slate-50">
+            <i data-lucide="settings" class="w-6 h-6 text-brand-blue animate-spin-slow"></i>
+        </div>
+        <h3 class="font-bold text-slate-800 mb-4 border-b pb-2">View Settings</h3>
+        <div class="space-y-6 overflow-y-auto h-[calc(100vh-150px)] pr-2">
+
+            <!-- SYSMOD Section -->
+            <div>
+                <h4 class="text-xs font-bold text-brand-blue uppercase tracking-wider mb-3">1. SYSMOD</h4>
+                <div class="space-y-2 pl-2">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('sysmod_grid_section')"
+                            data-view-id="sysmod_grid"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm font-medium text-slate-700">SYSMOD Atlas</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('brownfield_context_section')"
+                            data-view-id="brownfield_context"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm text-slate-600">Brownfield Architecture</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('stakeholders_section')"
+                            data-view-id="stakeholders"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm text-slate-600">Stakeholders</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('problem_statement_section')"
+                            data-view-id="problem_statement"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm font-medium text-slate-700">Problem Statement</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('system_idea_section')"
+                            data-view-id="system_idea"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm font-medium text-slate-700">System Idea</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('systemidea_context_section')"
+                            data-view-id="system_context"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm text-slate-600">System Idea Architecture</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('system_context_section')"
+                            data-view-id="requirements_context"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm text-slate-600">System Architecture</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('usecases_section')" data-view-id="usecases"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm font-medium text-slate-700">Use Cases</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('requirements_section')"
+                            data-view-id="requirements"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm font-medium text-slate-700">Requirements</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('functional_context_section')"
+                            data-view-id="functional_context"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm text-slate-600">Functional Architecture</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('logical_context_section')"
+                            data-view-id="logical_context"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm text-slate-600">Logical Architecture</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('product_context_section')"
+                            data-view-id="product_context"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm text-slate-600">Product Architecture</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- PLEML Section -->
+            <div>
+                <h4 class="text-xs font-bold text-brand-blue uppercase tracking-wider mb-3">2. PLEML</h4>
+                <div class="space-y-2 pl-2">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('uvl_renderer')" data-view-id="feature_tree_uvl"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm font-medium text-slate-700">Feature Tree (UVL)</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('sysml_renderer')"
+                            data-view-id="feature_tree_sysml"
+                            class="w-4 h-4 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                        <span class="text-sm font-medium text-slate-700">Feature Tree (SysML v2)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('feature_bindings_section')"
+                            data-view-id="feature_bindings"
+                            class="rounded text-brand-blue focus:ring-brand-blue border-slate-300">
+                        <span class="text-sm text-slate-600">Feature Bindings</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- FAS Section -->
+            <div>
+                <h4 class="text-xs font-bold text-brand-blue uppercase tracking-wider mb-3">3. FAS</h4>
+                <div class="space-y-2 pl-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleSection('functional_context_section')"
+                            data-view-id="functional_context"
+                            class="rounded text-brand-blue focus:ring-brand-blue border-slate-300">
+                        <span class="text-sm text-slate-600">Functional Context</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- Quality View Drawer -->
+    <div id="quality_drawer"
+        class="fixed right-0 top-20 bg-white/90 backdrop-blur-md shadow-lg border-l border-white/50 rounded-l-2xl p-4 transition-transform duration-300 z-40 translate-x-full w-96 group">
+        <div class="absolute -left-10 top-2 bg-white p-2 rounded-l-lg shadow-md cursor-pointer group-hover:bg-slate-50"
+            onclick="toggleQualityDrawer()">
+            <i id="quality_drawer_icon" data-lucide="check-circle-2" class="w-6 h-6 text-emerald-500"></i>
+        </div>
+        <div class="flex items-center justify-between mb-4 border-b pb-2">
+            <h3 class="font-bold text-slate-800">Quality Checks</h3>
+            <button onclick="fetchQualityChecks()"
+                class="text-xs text-brand-blue hover:underline flex items-center gap-1">
+                <i data-lucide="refresh-cw" class="w-3 h-3"></i> Refresh
+            </button>
+        </div>
+        <div id="quality_list" class="space-y-3 overflow-y-auto h-[calc(100vh-150px)] pr-2">
+            <p class="text-sm text-slate-500 italic text-center py-4">Loading checks...</p>
+        </div>
+    </div>
+
+    <main class="pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+
+        <!-- Header Section -->
+        <header class="mb-12 animate-fade-in">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex-1">
+                    <h1 id="project_name" class="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">Loading
+                        Project...</h1>
+                    <!-- Project Documentation Field -->
+                    <div class="mt-4">
+                        <label for="project_description" class="block text-sm font-medium text-slate-500 mb-1">Project
+                            Documentation</label>
+                        <textarea id="project_description" readonly
+                            class="w-full h-32 p-3 text-slate-600 border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue resize-none shadow-sm transition-all"
+                            placeholder="Fetching details from SysML v2 Repository..."></textarea>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                </div>
+            </div>
+        </header>
+
+        <!-- SYSMOD Grid Section -->
+        <section id="sysmod_grid_section" class="mb-12 animate-fade-in hidden">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="grid" class="w-6 h-6 text-slate-700"></i>
+                    SYSMOD Atlas
+                </h2>
+                <div class="flex items-center gap-2 relative z-10">
+                    <input type="checkbox" id="atlas_load_all" onchange="toggleAtlasLoadAll(this.checked)"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer">
+                    <label for="atlas_load_all" class="text-sm font-medium text-slate-700 cursor-pointer">Load
+                        All</label>
+                </div>
+            </div>
+            <div class="glass rounded-2xl p-8 shadow-soft border border-white/50 bg-white">
+                <div class="grid grid-cols-2 mb-4">
+                    <div class="text-center font-extrabold text-xl text-slate-800 uppercase tracking-widest">Problem
+                        Space</div>
+                    <div class="text-center font-extrabold text-xl text-slate-800 uppercase tracking-widest">Solution
+                        Space</div>
+                </div>
+                <div class="grid grid-cols-2 grid-rows-3 gap-0 h-[600px] border-4 border-black bg-white">
+                    <!-- Row 1 Left: FEATURE -->
+                    <div class="border-b-4 border-r-4 border-black flex items-center justify-center p-4">
+                        <div id="grid_FEATURE" data-section="uvl_renderer"
+                            class="draggable-node w-40 h-24 rounded-[50%] bg-gray-200 flex items-center justify-center font-bold border-2 border-black text-center shadow-lg transition-transform hover:scale-105 cursor-pointer text-slate-700 relative z-10">
+                            FEATURE</div>
+                    </div>
+                    <!-- Row 1 Right: BFAC -->
+                    <div class="border-b-4 border-black flex items-center justify-center p-4">
+                        <div id="grid_BFAC" data-section="brownfield_context_section"
+                            class="draggable-node w-48 h-24 rounded-[50%] bg-gray-200 flex items-center justify-center font-bold border-2 border-black text-center shadow-lg transition-transform hover:scale-105 cursor-pointer text-slate-700 text-sm px-2 relative z-10">
+                            Brownfield Architecture</div>
+                    </div>
+
+                    <!-- Row 2 Left: STAKE, PS -->
+                    <div class="border-b-4 border-r-4 border-black flex items-center justify-center gap-8 p-4">
+                        <div id="grid_STAKE" data-section="stakeholders_section"
+                            class="draggable-node w-32 h-20 rounded-[50%] bg-gray-200 flex items-center justify-center font-bold border-2 border-black text-xs text-center shadow-lg transition-transform hover:scale-105 cursor-pointer text-slate-700 px-1 relative z-10">
+                            Stakeholder</div>
+                        <div id="grid_PS" data-section="problem_statement_section"
+                            class="draggable-node w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center font-bold border-2 border-black text-xs text-center shadow-lg transition-transform hover:scale-105 cursor-pointer text-slate-700 px-2 break-words relative z-10">
+                            Problem Statement</div>
+                    </div>
+                    <!-- Row 2 Right: SIC -->
+                    <div class="border-b-4 border-black flex items-center justify-center p-4 relative">
+                        <div id="grid_SIC" data-section="systemidea_context_section"
+                            class="draggable-node w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center font-bold border-2 border-black text-center text-xs shadow-lg transition-transform hover:scale-105 cursor-pointer text-slate-700 px-2 break-words relative z-10">
+                            System Idea Architecture</div>
+                    </div>
+
+                    <!-- Row 3 Left: UC, SC, RE -->
+                    <div class="border-r-4 border-black relative p-4">
+                        <div id="grid_RE" data-section="requirements_section"
+                            class="draggable-node w-32 h-20 rounded-[50%] bg-gray-200 flex items-center justify-center font-bold border-2 border-black text-xs text-center shadow-lg transition-transform hover:scale-105 cursor-pointer text-slate-700 px-1 z-10 absolute bottom-6 left-6">
+                            Requirements</div>
+                        <div id="grid_UC" data-section="usecases_section"
+                            class="draggable-node w-32 h-20 rounded-[50%] bg-gray-200 flex items-center justify-center font-bold border-2 border-black text-xs text-center shadow-lg transition-transform hover:scale-105 cursor-pointer text-slate-700 px-1 z-10 absolute bottom-6 left-48">
+                            Use Cases</div>
+                        <div id="grid_SC" data-section="systemidea_context_section"
+                            class="draggable-node w-40 h-20 rounded-[50%] bg-gray-200 flex items-center justify-center font-bold border-2 border-black text-xs text-center shadow-lg transition-transform hover:scale-105 cursor-pointer text-slate-700 px-2 z-10 absolute top-1/2 right-4 transform -translate-y-1/2">
+                            System Architecture</div>
+                    </div>
+                    <!-- Row 3 Right: FUC, LAC, PAC -->
+                    <div class="relative p-4">
+                        <div id="grid_FUC" data-section="functional_context_section"
+                            class="draggable-node w-40 h-20 rounded-[50%] bg-gray-200 flex items-center justify-center font-bold border-2 border-black text-xs text-center shadow-lg transition-transform hover:scale-105 cursor-pointer text-slate-700 px-2 z-10 absolute top-6 left-8">
+                            Functional Architecture</div>
+                        <div id="grid_PAC" data-section="product_context_section"
+                            class="draggable-node w-40 h-20 rounded-[50%] bg-gray-200 flex items-center justify-center font-bold border-2 border-black text-xs text-center shadow-lg transition-transform hover:scale-105 cursor-pointer text-slate-700 px-2 z-10 absolute bottom-6 left-24">
+                            Product Architecture</div>
+                        <div id="grid_LAC" data-section="logical_context_section"
+                            class="draggable-node w-40 h-20 rounded-[50%] bg-gray-200 flex items-center justify-center font-bold border-2 border-black text-xs text-center shadow-lg transition-transform hover:scale-105 cursor-pointer text-slate-700 px-2 z-10 absolute top-1/2 right-8 transform -translate-y-1/2">
+                            Logical Architecture</div>
+                    </div>
+
+                    <!-- Overlay for Arrows -->
+                    <svg id="grid_arrows" class="absolute inset-0 w-full h-full pointer-events-none z-0"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <marker id="arrowhead" markerWidth="14" markerHeight="10" refX="13" refY="5" orient="auto">
+                                <polygon points="0 0, 14 5, 0 10" fill="white" stroke="black" stroke-width="2" />
+                            </marker>
+                        </defs>
+                        <!-- Lines will be injected by JS -->
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- Problem Statement Section -->
+        <section id="problem_statement_section" class="mb-12 animate-fade-in hidden delay-100">
+            <!-- Problem Statement -->
+            <div
+                class="glass-dark rounded-2xl p-8 shadow-soft relative overflow-hidden group hover:shadow-xl transition-shadow duration-300">
+                <div class="absolute top-0 right-0 p-6 opacity-10">
+                    <i data-lucide="target" class="w-32 h-32 text-white"></i>
+                </div>
+                <div class="flex items-center justify-between mb-6 relative z-10">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                            <i data-lucide="alert-circle" class="w-6 h-6 text-red-400"></i>
+                        </div>
+                        <h2
+                            class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-orange-300">
+                            Problem Statement
+                        </h2>
+                    </div>
+                    <!-- Edit Button -->
+                    <button id="problem_statement_edit_button" onclick="toggleProblemStatementEdit(true)"
+                        class="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors text-white/80 hover:text-white"
+                        title="Edit Problem Statement">
+                        <i data-lucide="pencil" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- View Mode -->
+                <p id="problem_statement_text" class="text-slate-300 leading-relaxed text-lg relative z-10">
+                    Loading problem statement...
+                </p>
+
+                <!-- Edit Mode -->
+                <div id="problem_statement_edit" class="hidden relative z-10">
+                    <div class="relative">
+                        <textarea id="problem_statement_input"
+                            class="w-full h-40 p-4 rounded-lg bg-slate-800/50 border border-slate-600 text-slate-200 focus:ring-2 focus:ring-red-400 focus:border-transparent resize-none mb-4 font-sans text-lg leading-relaxed"></textarea>
+
+                        <!-- AI Suggestion Button -->
+                        <button onclick="getAISuggestion()"
+                            class="absolute bottom-6 right-4 p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-lg hover:shadow-indigo-500/30 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-transform hover:-translate-y-0.5">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                            AI Suggest
+                        </button>
+                    </div>
+
+                    <div class="flex gap-3 justify-end">
+                        <button onclick="toggleProblemStatementEdit(false)"
+                            class="px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 font-medium transition-colors">Cancel</button>
+                        <button onclick="saveProblemStatement()"
+                            class="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-bold shadow-lg shadow-red-500/20 transition-all hover:translate-y-0.5">Save
+                            Changes</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Idea Section -->
+        <section id="system_idea_section" class="mb-12 animate-fade-in hidden delay-100">
+            <!-- System Idea -->
+            <div class="gradient-border p-8 shadow-soft group hover:shadow-xl transition-shadow duration-300 bg-white">
+                <div class="absolute top-0 right-0 p-6 opacity-5">
+                    <i data-lucide="lightbulb" class="w-32 h-32 text-brand-blue"></i>
+                </div>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-brand-blue/10 rounded-lg text-brand-blue">
+                        <i data-lucide="zap" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-800">System Idea</h2>
+                </div>
+                <p id="system_idea_text" class="text-slate-600 leading-relaxed text-lg">
+                    Loading system idea...
+                </p>
+            </div>
+        </section>
+
+        <!-- Brownfield Context -->
+        <section id="brownfield_context_section" class="mb-12 animate-fade-in hidden delay-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="layers" class="w-6 h-6 text-amber-600"></i>
+                    Brownfield Context
+                </h2>
+                <button class="text-sm text-brand-blue font-medium hover:underline">View Details</button>
+            </div>
+            <div class="glass rounded-2xl p-8 shadow-soft border border-white/50 bg-white">
+                <div class="w-full flex justify-center">
+                    <div class="mermaid w-full overflow-x-auto min-h-[600px] flex items-center justify-center">
+                        graph TD;
+                        Legacy[Legacy System] -.-> System((System))
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Context (Star Diagram) -->
+        <section id="systemidea_context_section" class="mb-12 animate-fade-in hidden delay-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="network" class="w-6 h-6 text-brand-teal"></i>
+                    System Context
+                </h2>
+                <button class="text-sm text-brand-blue font-medium hover:underline">View Details</button>
+            </div>
+
+            <div class="glass rounded-2xl p-8 shadow-soft border border-white/50 bg-white">
+                <div class="w-full flex justify-center">
+                    <div class="mermaid w-full overflow-x-auto min-h-[600px] flex items-center justify-center">
+                        graph TD
+                        %% Styling
+                        classDef system fill:#0f172a,stroke:#4f46e5,stroke-width:4px,color:white,shadow:0 0 15px
+                        #4f46e5;
+                        classDef actor fill:#f8fafc,stroke:#94a3b8,stroke-width:2px,color:#334155;
+
+                        subgraph Context
+                        direction TB
+                        C[Customer]:::actor -.->|Place Order| S((Autonomous<br>Drone System)):::system
+                        M[Maintenance<br>Crew]:::actor -.->|Repair| S
+                        ATC[Air Traffic<br>Control]:::actor -.->|Flight Auth| S
+                        API[Cloud API]:::actor <-->|Data Sync| S
+                            end
+
+                            linkStyle default stroke:#cbd5e1,stroke-width:2px,stroke-dasharray: 5 5;
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Requirements Context Section -->
+        <section id="system_context_section" class="mb-12 animate-fade-in hidden delay-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="list-checks" class="w-6 h-6 text-emerald-600"></i>
+                    Requirements Context
+                </h2>
+                <button class="text-sm text-brand-blue font-medium hover:underline">View Details</button>
+            </div>
+            <div class="glass rounded-2xl p-8 shadow-soft border border-white/50 bg-white">
+                <div class="w-full flex justify-center">
+                    <div class="mermaid w-full overflow-x-auto min-h-[600px] flex items-center justify-center">
+                        graph TD;
+                        Loading[...]
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stakeholders Section -->
+        <section id="stakeholders_section" class="mb-12 animate-fade-in hidden delay-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="users" class="w-6 h-6 text-indigo-600"></i>
+                    Stakeholders
+                </h2>
+            </div>
+            <div class="glass rounded-2xl p-8 shadow-soft border border-white/50 bg-white overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                    Name</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                    Description</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                    Contact</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                    Risk</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                    Effort</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                    Categories</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stakeholders_table_body" class="bg-white divide-y divide-slate-200">
+                            <!-- Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Bindings Section -->
+        <section id="feature_bindings_section" class="mb-12 animate-fade-in hidden delay-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="link" class="w-6 h-6 text-pink-600"></i>
+                    Feature Bindings (@FB)
+                </h2>
+                <button onclick="toggleFeatureBindingAxes()"
+                    class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
+                    <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+                    Swap Axes
+                </button>
+            </div>
+            <div class="glass rounded-2xl p-8 shadow-soft border border-white/50 bg-white overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead id="feature_bindings_table_head" class="bg-slate-50">
+                            <!-- Helper generated headers -->
+                        </thead>
+                        <tbody id="feature_bindings_table_body" class="bg-white divide-y divide-slate-200">
+                            <!-- Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Functional Architecture Context -->
+        <section id="functional_context_section" class="mb-12 animate-fade-in hidden delay-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="activity" class="w-6 h-6 text-blue-500"></i>
+                    Functional Architecture Context
+                </h2>
+                <button class="text-sm text-brand-blue font-medium hover:underline">View Details</button>
+            </div>
+            <div class="glass rounded-2xl p-8 shadow-soft border border-white/50 bg-white">
+                <div class="w-full flex justify-center">
+                    <div class="mermaid w-full overflow-x-auto min-h-[600px] flex items-center justify-center">
+                        graph LR;
+                        Input --> Func((Function)) --> Output
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Logical Architecture Context -->
+        <section id="logical_context_section" class="mb-12 animate-fade-in hidden delay-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="cpu" class="w-6 h-6 text-purple-600"></i>
+                    Logical Architecture Context
+                </h2>
+                <button class="text-sm text-brand-blue font-medium hover:underline">View Details</button>
+            </div>
+            <div class="glass rounded-2xl p-8 shadow-soft border border-white/50 bg-white">
+                <div class="w-full flex justify-center">
+                    <div class="mermaid w-full overflow-x-auto min-h-[600px] flex items-center justify-center">
+                        block-beta
+                        columns 3
+                        block:Group1
+                        A B
+                        end
+                        C
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Product Architecture Context -->
+        <section id="product_context_section" class="mb-12 animate-fade-in hidden delay-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="package" class="w-6 h-6 text-emerald-600"></i>
+                    Product Architecture Context
+                </h2>
+                <button class="text-sm text-brand-blue font-medium hover:underline">View Details</button>
+            </div>
+            <div class="glass rounded-2xl p-8 shadow-soft border border-white/50 bg-white">
+                <div class="w-full flex justify-center">
+                    <div class="mermaid w-full overflow-x-auto min-h-[600px] flex items-center justify-center">
+                        graph TD;
+                        Product --> Component1
+                        Product --> Component2
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Use Cases -->
+        <section id="usecases_section" class="mb-12 animate-fade-in hidden delay-300">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <i data-lucide="users" class="w-6 h-6 text-brand-blue"></i>
+                Use Cases
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div
+                    class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-brand-blue/30 transition-all duration-300 group cursor-pointer">
+                    <div class="flex justify-between items-start mb-4">
+                        <span
+                            class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">Customer</span>
+                        <i data-lucide="package"
+                            class="w-5 h-5 text-slate-300 group-hover:text-brand-blue transition-colors"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Request Delivery</h3>
+                    <p class="text-slate-500 italic text-sm">Initiate a package delivery request specifying pickup and
+                        drop-off locations.</p>
+                </div>
+
+                <!-- Card 2 -->
+                <div
+                    class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-brand-blue/30 transition-all duration-300 group cursor-pointer">
+                    <div class="flex justify-between items-start mb-4">
+                        <span
+                            class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Operator</span>
+                        <i data-lucide="map"
+                            class="w-5 h-5 text-slate-300 group-hover:text-brand-blue transition-colors"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Monitor Fleet</h3>
+                    <p class="text-slate-500 italic text-sm">Real-time supervision of all active drones and battery
+                        status.</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div
+                    class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-brand-blue/30 transition-all duration-300 group cursor-pointer">
+                    <div class="flex justify-between items-start mb-4">
+                        <span
+                            class="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">Drone</span>
+                        <i data-lucide="navigation"
+                            class="w-5 h-5 text-slate-300 group-hover:text-brand-blue transition-colors"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Execute Flight Path</h3>
+                    <p class="text-slate-500 italic text-sm">Follow computed trajectory while avoiding dynamic
+                        obstacles.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Requirements Table -->
+        <section id="requirements_section" class="mb-12 animate-fade-in hidden delay-400">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <i data-lucide="list-checks" class="w-6 h-6 text-emerald-500"></i>
+                Requirements
+            </h2>
+            <!-- Content will be loaded dynamically -->
+            <div class="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                <p class="text-slate-500 italic">Loading Requirements...</p>
+            </div>
+        </section>
+
+        <!-- UVL Renderer Section -->
+        <section id="uvl_renderer" class="mb-12 animate-fade-in hidden">
+            <div class="glass gradient-border p-6 shadow-sm">
+                <h2 class="text-xl font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <i data-lucide="layers" class="w-5 h-5 text-indigo-600"></i>
+                    Feature Tree (UVL)
+                </h2>
+                <div id="feature_tree_container" class="split-container bg-slate-50 rounded-lg border border-slate-200">
+                    <!-- Left Pane: Editor -->
+                    <div id="feature_tree_left" class="split-pane flex flex-col p-4 bg-white" style="width: 40%;">
+                        <div class="flex justify-between items-center mb-2">
+                            <label for="uvl_input" class="block text-sm font-medium text-slate-700">UVL Code</label>
+                            <button onclick="renderUVL()"
+                                class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded hover:bg-indigo-100 text-xs font-semibold flex items-center gap-1 transition-colors">
+                                <i data-lucide="play" class="w-3 h-3"></i> Render
+                            </button>
+                        </div>
+                        <textarea id="uvl_input"
+                            class="flex-grow w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-xs p-2 bg-slate-50 resize-none"
+                            style="tab-size: 4;" placeholder="Loading UVL..."></textarea>
+                    </div>
+
+                    <!-- Resizer -->
+                    <div id="feature_tree_resizer" class="resizer"></div>
+
+                    <!-- Right Pane: Preview -->
+                    <div id="feature_tree_right" class="split-pane flex flex-col p-4 bg-slate-50 flex-grow"
+                        style="width: 60%;">
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Preview</label>
+                        <div id="uvl_output"
+                            class="flex-grow overflow-hidden relative border border-slate-200 bg-white rounded shadow-inner">
+                            <p
+                                class="text-slate-400 italic text-sm absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                Rendered diagram will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SysML Feature Tree Section -->
+        <section id="sysml_renderer" class="mb-12 animate-fade-in hidden">
+            <div class="glass gradient-border p-6 shadow-sm">
+                <h2 class="text-xl font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <i data-lucide="network" class="w-5 h-5 text-teal-600"></i>
+                    Feature Tree (SysML v2)
+                </h2>
+                <div id="sysml_tree_container" class="split-container bg-slate-50 rounded-lg border border-slate-200">
+                    <!-- Left Pane: Matrix View -->
+                    <div id="sysml_tree_left" class="split-pane flex flex-col p-4 bg-white" style="width: 40%;">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium text-slate-700">Feature Configuration</label>
+                            <div class="flex gap-2">
+                                <button onclick="loadSysMLTreeData()"
+                                    class="px-3 py-1 bg-slate-100 text-slate-700 rounded hover:bg-slate-200 text-xs font-semibold flex items-center gap-1 transition-colors">
+                                    <i data-lucide="refresh-cw" class="w-3 h-3"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex-grow overflow-auto border border-slate-300 rounded-md bg-white">
+                            <table id="sysml_matrix_container" class="min-w-full divide-y divide-slate-200">
+                                <thead class="bg-slate-50 sticky top-0">
+                                    <tr>
+                                        <th scope="col"
+                                            class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                            Feature</th>
+                                        <th scope="col"
+                                            class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                            Type</th>
+                                        <th scope="col"
+                                            class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                            State</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sysml_matrix_body" class="bg-white divide-y divide-slate-200">
+                                    <!-- Matrix Rows -->
+                                </tbody>
+                            </table>
+                            <div id="sysml_matrix_loading" class="p-4 text-center text-sm text-slate-400">Waiting for
+                                data...</div>
+                        </div>
+                    </div>
+
+                    <!-- Resizer -->
+                    <div id="sysml_tree_resizer" class="resizer"></div>
+
+                    <!-- Right Pane: Preview -->
+                    <div id="sysml_tree_right" class="split-pane flex flex-col p-4 bg-slate-50 flex-grow"
+                        style="width: 60%;">
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Feature Tree</label>
+                        <div id="sysml_output"
+                            class="flex-grow overflow-hidden relative border border-slate-200 bg-white rounded shadow-inner">
+                            <p
+                                class="text-slate-400 italic text-sm absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                Diagram will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-400 text-sm">
+            &copy; 2025 MBSE4U.
+        </div>
+    </footer>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+
+        // ---------------------------------------------------------
+        // Dynamic Data Integration & View Settings
+        // ---------------------------------------------------------
+
+        const params = new URLSearchParams(window.location.search);
+        const serverUrl = params.get('server_url');
+        const projectId = params.get('project_id');
+        const commitId = params.get('commit_id');
+        const sysmodProjectId = params.get('sysmod_project_id');
+
+        let currentProjectData = null;
+        const loadedSections = new Set();
+
+        // Map Section IDs to their specialized render functions
+        const sectionRenderers = {
+            'vision_section': renderVision, // Legacy or container?
+            'sysmod_grid_section': updateSysmodAtlasStatus,
+            'problem_statement_section': renderProblemStatement,
+            'system_idea_section': renderSystemIdea,
+            'brownfield_context_section': () => renderSysmodContext('brownfield_context_section', 'BROWNFIELD', 'Brownfield Architecture'),
+            'systemidea_context_section': () => renderSysmodContext('systemidea_context_section', 'SYSTEMIDEA', 'System Idea'),
+            'system_context_section': () => renderSysmodContext('system_context_section', 'SYSTEM', 'System'),
+            'functional_context_section': () => renderSysmodContext('functional_context_section', 'FUNCTIONAL', 'Functional Architecture'),
+            'logical_context_section': () => renderSysmodContext('logical_context_section', 'LOGICAL', 'Logical Architecture'),
+            'product_context_section': () => renderSysmodContext('product_context_section', 'PRODUCT', 'Product Architecture'),
+            'feature_bindings_section': renderFeatureBindings,
+            'usecases_section': renderUseCases,
+            'requirements_section': renderRequirements,
+            'stakeholders_section': renderStakeholders,
+            'uvl_renderer': loadFeatureTreeData, // Load data when section is toggled or init
+            'sysml_renderer': loadSysMLTreeData
+        };
+
+        // ... [Existing Code] ...
+
+        // SysML Tree Resizing Logic
+        const sysmlResizer = document.getElementById('sysml_tree_resizer');
+        const sysmlLeftPane = document.getElementById('sysml_tree_left');
+        const sysmlRightPane = document.getElementById('sysml_tree_right');
+        const sysmlContainer = document.getElementById('sysml_tree_container');
+
+        if (sysmlResizer && sysmlLeftPane && sysmlRightPane && sysmlContainer) {
+            let isResizing = false;
+
+            sysmlResizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                sysmlResizer.classList.add('resizing');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                const containerRect = sysmlContainer.getBoundingClientRect();
+                const containerWidth = containerRect.width;
+                const mouseX = e.clientX - containerRect.left;
+                const minWidth = 50;
+                if (mouseX > minWidth && mouseX < containerWidth - minWidth) {
+                    const leftWidthPercent = (mouseX / containerWidth) * 100;
+                    sysmlLeftPane.style.width = `${leftWidthPercent}%`;
+                    sysmlRightPane.style.width = `${100 - leftWidthPercent}%`;
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    sysmlResizer.classList.remove('resizing');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+            });
+        }
+
+        async function loadSysMLTreeData() {
+            const matrixBody = document.getElementById('sysml_matrix_body');
+            const loadingIndicator = document.getElementById('sysml_matrix_loading');
+
+            if (!matrixBody) return;
+
+            matrixBody.innerHTML = '';
+            loadingIndicator.style.display = 'block';
+            loadingIndicator.textContent = 'Loading configuration...';
+
+            try {
+                const response = await fetch('/api/feature-tree-sysml', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId,
+                        sysmod_project_id: sysmodProjectId
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    loadingIndicator.style.display = 'none';
+
+                    if (data.matrix) {
+                        renderSysMLMatrix(data.matrix);
+                    } else {
+                        loadingIndicator.textContent = "No configuration data found.";
+                        loadingIndicator.style.display = 'block';
+                    }
+
+                    if (data.graph_code) {
+                        renderSysMLTree(data.graph_code);
+                    }
+                } else {
+                    loadingIndicator.textContent = "Error loading data.";
+                }
+            } catch (e) {
+                console.error("Error fetching SysML tree:", e);
+                loadingIndicator.textContent = "Connection error.";
+            }
+        }
+
+        function renderSysMLMatrix(matrixData) {
+            const thead = document.querySelector('#sysml_matrix_container thead');
+            const tbody = document.getElementById('sysml_matrix_body');
+
+            if (!matrixData || !matrixData.headers || !matrixData.rows) {
+                tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-2 text-red-500">Invalid Matrix Data</td></tr>';
+                return;
+            }
+
+            // 1. Render Headers
+            const headerRow = document.createElement('tr');
+            matrixData.headers.forEach((headerText, index) => {
+                const th = document.createElement('th');
+                th.scope = 'col';
+                th.className = 'px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 bg-slate-50'; // sticky header
+                th.textContent = headerText;
+                headerRow.appendChild(th);
+            });
+            thead.innerHTML = '';
+            thead.appendChild(headerRow);
+
+            // 2. Render Rows
+            tbody.innerHTML = '';
+            matrixData.rows.forEach(row => {
+                const tr = document.createElement('tr');
+
+                // Feature Name Cell
+                const nameTd = document.createElement('td');
+                nameTd.className = "px-3 py-2 whitespace-nowrap text-sm font-medium text-slate-900 sticky left-0 bg-white shadow-sm"; // Sticky First Column
+                nameTd.textContent = row.name;
+                tr.appendChild(nameTd);
+
+                // Value Cells (Configs)
+                if (row.values && Array.isArray(row.values)) {
+                    row.values.forEach(val => {
+                        const td = document.createElement('td');
+                        td.className = "px-3 py-2 whitespace-nowrap text-sm text-center";
+
+                        const isSelected = val === 'Selected';
+                        const badgeClass = isSelected
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-slate-100 text-slate-400';
+
+                        const badge = document.createElement('span');
+                        badge.className = `inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${badgeClass}`;
+                        badge.textContent = isSelected ? '✓' : '-'; // cleaner symbol
+
+                        td.appendChild(badge);
+                        tr.appendChild(td);
+                    });
+                }
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function renderSysMLTree(graphCode) {
+            const outputDiv = document.getElementById('sysml_output');
+
+            if (!graphCode) {
+                outputDiv.innerHTML = '<p class="text-slate-500 italic">No diagram data available.</p>';
+                return;
+            }
+
+            try {
+                outputDiv.innerHTML = `<div class="mermaid" style="height: 100%; width: 100%;">${graphCode}</div>`;
+                outputDiv.removeAttribute('data-processed');
+
+                if (window.mermaid) {
+                    await window.mermaid.run({ nodes: [outputDiv.querySelector('.mermaid')] });
+                }
+            } catch (e) {
+                outputDiv.innerHTML = `<p class="text-red-500">Error rendering: ${e.message}</p>`;
+            }
+        }
+
+        if (serverUrl) {
+            document.getElementById('repository_url').textContent = serverUrl;
+        }
+
+        // Initialize
+        if (serverUrl && projectId && commitId && sysmodProjectId) {
+            fetchProjectData();
+        } else {
+            document.getElementById('project_name').textContent = "Missing Parameters";
+        }
+
+        // Initialize SortableJS
+        if (typeof Sortable !== 'undefined') {
+            new Sortable(document.querySelector('main'), {
+                animation: 150,
+                handle: 'h2',
+                draggable: 'section',
+                ghostClass: 'bg-slate-100',
+                onEnd: function (evt) {
+                    console.log('Section moved:', evt.item.id);
+                }
+            });
+        }
+
+        async function fetchProjectData() {
+            if (!sysmodProjectId) return;
+
+            try {
+                const response = await fetch('/api/sysmod_project', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId,
+                        element_id: sysmodProjectId
+                    })
+                });
+
+                if (response.ok) {
+                    currentProjectData = await response.json();
+
+                    if (!currentProjectData) {
+                        throw new Error("Received empty data from server");
+                    }
+
+                    // Update Header
+                    const name = currentProjectData.name || currentProjectData['@id'] || "Untitled Project";
+                    document.getElementById('project_name').textContent = name;
+                    document.title = `${name} - Dashboard`;
+                    let description = "No description available.";
+                    if (currentProjectData.documentation) {
+                        description = currentProjectData.documentation || "";
+                    }
+                    document.getElementById('project_description').value = description;
+
+                    console.log("Project Data Loaded:", currentProjectData);
+
+                    // Restore views (which will trigger lazy loading)
+                    restoreViewSettings();
+
+                } else {
+                    const error = await response.json().catch(() => ({}));
+                    console.error("Failed to fetch project data", error);
+                    document.getElementById('project_name').textContent = "Error Loading Project";
+                    document.getElementById('project_description').value = error.error || "Server returned an error.";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById('project_name').textContent = "Connection Error";
+                document.getElementById('project_description').value = error.message || "Please check if the server is running.";
+            }
+        }
+
+        function restoreViewSettings() {
+            const storageKey = `sysmod_views_${sysmodProjectId}`;
+            let settings = {};
+            try {
+                settings = JSON.parse(localStorage.getItem(storageKey)) || {};
+            } catch (e) { console.error("Error reading settings", e); }
+
+            // Default: only Vision is visible if no settings found
+            const isFirstVisit = Object.keys(settings).length === 0;
+
+            // Iterate through registered sections
+            for (const sectionId in sectionRenderers) {
+                const checkbox = document.querySelector(`input[onchange*="${sectionId}"]`);
+                const section = document.getElementById(sectionId);
+
+                if (!checkbox || !section) continue;
+
+                let isVisible = false;
+                if (isFirstVisit) {
+                    // Fallback to HTML default
+                    isVisible = checkbox.checked;
+                } else {
+                    // Use saved setting, fallback to checkbox default if undefined (e.g. new feature)
+                    if (settings.hasOwnProperty(sectionId)) {
+                        isVisible = settings[sectionId] === true;
+                    } else {
+                        isVisible = checkbox.checked;
+                    }
+                }
+
+                // Apply state
+                checkbox.checked = isVisible;
+                if (isVisible) {
+                    section.classList.remove('hidden');
+                } else {
+                    section.classList.add('hidden');
+                }
+
+                // Load data if visible
+                if (isVisible) {
+                    loadSectionData(sectionId);
+                }
+            }
+        }
+
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const checkbox = document.querySelector(`input[onchange*="${sectionId}"]`);
+            if (section && checkbox) {
+                const isVisible = checkbox.checked;
+
+                if (isVisible) {
+                    section.classList.remove('hidden');
+                    section.classList.add('animate-fade-in');
+
+                    // If SYSMOD Grid, trigger arrow redraw after layout updates
+                    if (sectionId === 'sysmod_grid_section') {
+                        setTimeout(() => {
+                            if (typeof drawSysmodArrows === 'function') {
+                                drawSysmodArrows();
+                            }
+                        }, 50);
+                    }
+                } else {
+                    section.classList.add('hidden');
+                }
+
+                // Save to local storage (Snapshoting ALL sections to ensure consistency)
+                const storageKey = `sysmod_views_${sysmodProjectId}`;
+                let settings = {};
+                try {
+                    settings = JSON.parse(localStorage.getItem(storageKey)) || {};
+                } catch (e) { }
+
+                // Update current
+                settings[sectionId] = isVisible;
+
+                // Capture ALL other sections to prevent future "fallback to default" ambiguity
+                for (const key in sectionRenderers) {
+                    const cb = document.querySelector(`input[onchange*="${key}"]`);
+                    if (cb) settings[key] = cb.checked;
+                }
+
+                localStorage.setItem(storageKey, JSON.stringify(settings));
+
+                // Lazy load if turning on
+                if (isVisible) {
+                    loadSectionData(sectionId);
+                }
+            }
+        }
+        const loadingSections = new Set(); // Track in-progress loads
+
+        async function loadSectionData(sectionId) {
+            if (!currentProjectData) {
+                console.warn(`loadSectionData(${sectionId}): Skipped - currentProjectData is null`);
+                return;
+            }
+            if (loadedSections.has(sectionId) || loadingSections.has(sectionId)) {
+                console.log(`loadSectionData(${sectionId}): Skipped - already loaded or loading`);
+                return;
+            }
+
+            const renderer = sectionRenderers[sectionId];
+            if (renderer) {
+                loadingSections.add(sectionId); // Mark as loading immediately
+                console.log(`Lazy loading ${sectionId}... calling renderer`);
+
+                // Show Overlay
+                const overlay = document.getElementById('loading_overlay');
+                const overlayTitle = overlay.querySelector('h3');
+                const overlayText = overlay.querySelector('p');
+
+                overlay.style.display = 'flex';
+                overlayTitle.textContent = "Loading View";
+                overlayText.textContent = `Rendering ${sectionId.replace('_section', '').replace(/_/g, ' ')}...`;
+
+                try {
+                    await renderer(currentProjectData);
+                    loadedSections.add(sectionId); // Mark as fully loaded on success
+                } catch (err) {
+                    console.error(`Error rendering ${sectionId}:`, err);
+                    alert(`Error rendering view: ${err.message}`);
+                    // If failed, we might want to allow retry? 
+                    // For now, we leave it out of loadedSections so it can be retried, 
+                    // but we must remove from loadingSections.
+                } finally {
+                    loadingSections.delete(sectionId); // Clear loading flag
+                    overlay.style.display = 'none';
+                }
+            } else {
+                console.warn(`loadSectionData(${sectionId}): No renderer found`);
+            }
+        }
+
+        // Render Functions
+        // Generic Render Context Function
+        async function renderSysmodContext(sectionId, contextType, defaultTitle) {
+            console.log(`Rendering ${contextType} for ${sectionId}...`);
+            const container = document.querySelector(`#${sectionId} .mermaid`);
+            if (!container) return;
+
+            // Show Overlay explicitly
+            const overlay = document.getElementById('loading_overlay');
+            const overlayTitle = overlay.querySelector('h3');
+            const overlayText = overlay.querySelector('p');
+            overlay.style.display = 'flex';
+            overlayTitle.textContent = "Loading Context";
+            overlayText.textContent = `Rendering ${defaultTitle}...`;
+
+            try {
+                const response = await fetch('/api/sysmod-context', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId,
+                        sysmod_project_id: sysmodProjectId,
+                        context_type: contextType
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data && data.context) {
+                        let systemName = defaultTitle;
+                        if (data.system && data.system.name) systemName = data.system.name;
+
+                        let graphDef = `graph TD;\n`;
+
+                        // System Subgraph
+                        graphDef += `subgraph SystemBox ["${systemName}"]\n`;
+                        graphDef += `direction TB\n`;
+
+                        // Internal Parts
+                        console.log("System Context Data:", data);
+                        let hasParts = false;
+                        if (data.system && data.system.parts && data.system.parts.length > 0) {
+                            data.system.parts.forEach((part, i) => {
+                                const partName = (part.name || "Part").replace(/["\n\r]/g, '');
+                                graphDef += `Part${i}["«part»<br/>${partName}"]\n`;
+                                graphDef += `style Part${i} fill:#ffffff,stroke:#334155,stroke-width:1px,color:#0f172a;\n`;
+                                hasParts = true;
+                            });
+                        }
+
+                        graphDef += `end\n`; // End Subgraph
+
+                        // Style SystemBox
+                        graphDef += `style SystemBox fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e40af;\n`;
+
+                        // Actors
+                        if (data.actors && data.actors.length > 0) {
+                            data.actors.forEach((actor, index) => {
+                                const actorId = `Actor${index}`;
+                                const actorName = actor.name || "Actor";
+                                graphDef += `${actorId}["${actorName}"] --- SystemBox;\n`;
+                                graphDef += `style ${actorId} fill:#f8fafc,stroke:#94a3b8,stroke-width:1px,color:#334155;\n`;
+                            });
+                        } else {
+                            graphDef += `NoActors["No Actors Found"] -.-> SystemBox;\n`;
+                            graphDef += `style NoActors stroke-dasharray: 5 5;\n`;
+                        }
+
+                        if (window.mermaid) {
+                            container.textContent = graphDef;
+                            container.removeAttribute('data-processed');
+                            try {
+                                await window.mermaid.run({ nodes: [container] });
+                                // Initialize Pan Zoom
+                                const svg = container.querySelector('svg');
+                                if (svg) {
+                                    // Remove max-width to allow zooming properly
+                                    svg.style.maxWidth = 'none';
+                                    svg.style.height = '600px';
+                                    svg.style.width = '100%';
+
+                                    svgPanZoom(svg, {
+                                        zoomEnabled: true,
+                                        controlIconsEnabled: true,
+                                        fit: true,
+                                        center: true,
+                                        minZoom: 0.1,
+                                        maxZoom: 10
+                                    });
+                                }
+                            } catch (err) {
+                                console.error("Mermaid run error:", err);
+                                container.textContent = `graph TD;\nError[Rendering Error];`;
+                                window.mermaid.run({ nodes: [container] });
+                            }
+                        }
+                    } else {
+                        console.warn(`${contextType} not found.`);
+                        container.textContent = "graph TD; Error[Context Not Found]; style Error fill:#fee2e2,stroke:#ef4444;";
+                        container.removeAttribute('data-processed');
+                        if (window.mermaid) {
+                            window.mermaid.run({ nodes: [container] });
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                const overlay = document.getElementById('loading_overlay');
+                if (overlay) overlay.style.display = 'none';
+            }
+        }
+
+        // Render Stakeholders
+        async function renderStakeholders(projectData) {
+            console.log("Rendering Stakeholders...");
+            try {
+                const response = await fetch('/api/stakeholders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId,
+                        sysmod_project_id: sysmodProjectId
+                    })
+                });
+
+                if (response.ok) {
+                    const stakeholders = await response.json();
+                    const tbody = document.getElementById('stakeholders_table_body');
+                    if (tbody) {
+                        tbody.innerHTML = '';
+                        stakeholders.forEach(s => {
+                            const tr = document.createElement('tr');
+                            tr.className = "hover:bg-slate-50 transition-colors";
+                            tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${s.name || 'Unnamed'}</td>
+                            <td class="px-6 py-4 text-sm text-slate-500 min-w-[400px] max-w-3xl whitespace-normal break-words">${s.description || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${s.contact || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${s.risk || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${s.effort || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${(s.categories || []).join ? (s.categories || []).join(', ') : s.categories}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                        if (stakeholders.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-slate-400">No stakeholders found.</td></tr>';
+                        }
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+
+
+
+        let currentFeatureBindings = [];
+        let isFeatureBindingSwapped = false;
+
+        function toggleFeatureBindingAxes() {
+            isFeatureBindingSwapped = !isFeatureBindingSwapped;
+            renderFeatureBindingsTable();
+        }
+
+        function renderFeatureBindingsTable() {
+            const bindings = currentFeatureBindings;
+            const thead = document.getElementById('feature_bindings_table_head');
+            const tbody = document.getElementById('feature_bindings_table_body');
+
+            if (!thead || !tbody) return;
+
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+
+            if (!bindings || bindings.length === 0) {
+                thead.innerHTML = '<tr><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Feature Bindings</th></tr>';
+                tbody.innerHTML = '<tr><td class="px-6 py-4 text-center text-slate-400">No feature bindings found.</td></tr>';
+                return;
+            }
+
+            // Extract unique Clients and Suppliers Objects {name, id}
+            // Use dicts to deduplicate by ID
+            const clientMap = {};
+            const supplierMap = {};
+
+            bindings.forEach(b => {
+                if (b.client && b.client.id) clientMap[b.client.id] = b.client.name;
+                if (b.supplier && b.supplier.id) supplierMap[b.supplier.id] = b.supplier.name;
+            });
+
+            // Convert to arrays and sort by name
+            const clients = Object.keys(clientMap).map(id => ({ id, name: clientMap[id] })).sort((a, b) => a.name.localeCompare(b.name));
+            const suppliers = Object.keys(supplierMap).map(id => ({ id, name: supplierMap[id] })).sort((a, b) => a.name.localeCompare(b.name));
+
+            // Determine Rows and Columns based on state
+            const rowHeaders = isFeatureBindingSwapped ? suppliers : clients;
+            const colHeaders = isFeatureBindingSwapped ? clients : suppliers;
+            const topLeftText = isFeatureBindingSwapped ? "Supplier \\ Client" : "Client \\ Supplier";
+
+            // --- Generate Header Row ---
+            const headerTr = document.createElement('tr');
+            // Top-left cell
+            const thFirst = document.createElement('th');
+            thFirst.className = "px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider bg-slate-100 border-b border-r border-slate-200";
+            thFirst.innerText = topLeftText;
+            headerTr.appendChild(thFirst);
+
+            colHeaders.forEach(col => {
+                const th = document.createElement('th');
+                th.className = "px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200 min-w-[100px]";
+                th.innerText = col.name;
+                th.title = col.id; // Tooltip for ID
+                headerTr.appendChild(th);
+            });
+            thead.appendChild(headerTr);
+
+            // --- Generate Body Rows ---
+            rowHeaders.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+
+                // Row Header
+                const tdRowHeader = document.createElement('td');
+                tdRowHeader.className = "px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 border-r border-slate-200 bg-white sticky left-0";
+                tdRowHeader.innerText = row.name;
+                tdRowHeader.title = row.id;
+                tr.appendChild(tdRowHeader);
+
+                // Matrix Cells
+                colHeaders.forEach(col => {
+                    const td = document.createElement('td');
+                    td.className = "px-6 py-4 whitespace-nowrap text-center text-sm border-slate-100 border cursor-pointer hover:bg-slate-100 transition-colors select-none";
+
+                    // Determine Client and Supplier IDs for this cell
+                    const clientId = isFeatureBindingSwapped ? col.id : row.id;
+                    const supplierId = isFeatureBindingSwapped ? row.id : col.id;
+
+                    // Check if binding exists
+                    const binding = bindings.find(b => b.client.id === clientId && b.supplier.id === supplierId);
+
+                    if (binding) {
+                        td.innerHTML = '<span class="text-emerald-600 font-bold">x</span>';
+                        td.classList.add("bg-emerald-50");
+                        td.dataset.bindingId = binding.id;
+                    } else {
+                        td.innerText = "-";
+                        td.classList.add("text-slate-300");
+                        delete td.dataset.bindingId;
+                    }
+
+                    // Click Handler
+                    td.onclick = () => toggleBindingState(td, clientId, supplierId);
+
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        async function toggleBindingState(cell, clientId, supplierId) {
+            // Visual feedback
+            const originalContent = cell.innerHTML;
+            cell.innerHTML = '<div class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600"></div>';
+            cell.classList.add("opacity-50", "pointer-events-none");
+
+            // Get existing binding ID if any
+            const bindingId = cell.dataset.bindingId;
+
+            try {
+                const response = await fetch('/api/feature-bindings/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId,
+                        client_id: clientId,
+                        supplier_id: supplierId,
+                        binding_id: bindingId
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        // Update local model
+                        if (result.action === 'created') {
+                            // Fetch names for local update (assume known from context, but tricky)
+                            // We can just query the `clientMap` we constructed or rebuild the object
+                            // simpler: re-fetch or reconstruct from row/col
+                            // Actually, I need to add to `currentFeatureBindings`.
+                            // I need the NAMES for client/supplier to add to local cache for re-render consistency,
+                            // OR I trust the next render to pick them up if I had them.
+                            // But wait, the client/supplier DEFINITIONS are already in the headers. I can look them up.
+
+                            // Find client/supplier names from existing bindings (if any) or...
+                            // Actually, we don't have a global lookup if they had 0 bindings before.
+                            // But here we clicked a cell intersection of X and Y, so X and Y MUST describe rows/cols,
+                            // so they ARE in our headers.
+
+                            // Better: Just fetch the updated list or hack it.
+                            // Fetching whole list is safest but slower.
+                            // Let's hack it:
+                            // We need to find ONE binding with client.id == clientId to get the name, same for supplier.
+
+                            const cObj = currentFeatureBindings.find(b => b.client.id === clientId)?.client || { id: clientId, name: cell.closest('tr').querySelector(`td[title="${clientId}"]`)?.innerText || "Unknown Client" };
+                            const sObj = currentFeatureBindings.find(b => b.supplier.id === supplierId)?.supplier || { id: supplierId, name: document.querySelector(`#feature_bindings_table_head th[title="${supplierId}"]`)?.innerText || "Unknown Supplier" };
+
+                            if (cObj && sObj) {
+                                currentFeatureBindings.push({
+                                    id: result.id,
+                                    client: cObj,
+                                    supplier: sObj
+                                });
+                            }
+                        } else {
+                            // Deleted
+                            currentFeatureBindings = currentFeatureBindings.filter(b => !(b.client.id === clientId && b.supplier.id === supplierId));
+                        }
+
+                        renderFeatureBindingsTable();
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error("Toggle failed", e);
+            }
+
+            // Revert on failure
+            cell.innerHTML = originalContent;
+            cell.classList.remove("opacity-50", "pointer-events-none");
+            alert("Failed to update binding.");
+        }
+
+        // Render Requirements
+        async function renderRequirements(projectData) {
+            console.log("Rendering Requirements...");
+            const container = document.getElementById('requirements_section');
+
+            try {
+                const response = await fetch('/api/sysmod-requirements', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId,
+                        sysmod_project_id: sysmodProjectId
+                    })
+                });
+
+                if (!response.ok) throw new Error("Failed to fetch requirements");
+
+                const requirements = await response.json();
+
+                // Build Table
+                let html = `
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="list-checks" class="w-6 h-6 text-slate-700"></i>
+                            Requirements
+                        </h2>
+                        <span class="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">${requirements.length} Items</span>
+                    </div>
+                    <div class="overflow-x-auto bg-white rounded-xl shadow-sm border border-slate-200">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Identifier</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Text</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Motivation</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Priority</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Obligation</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Stability</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                `;
+
+                requirements.forEach(req => {
+                    html += `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-brand-blue">
+                                ${req.uri ? `<a href="${req.uri}" target="_blank" class="hover:underline">${req.identifier}</a>` : req.identifier}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">${req.name}</td>
+                            <td class="px-6 py-4 text-sm text-slate-600 max-w-md break-words">${req.text}</td>
+                            <td class="px-6 py-4 text-sm text-slate-600 max-w-xs break-words">${req.motivation || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    ${req.priority === 'Critical' ? 'bg-red-100 text-red-800' :
+                            req.priority === 'High' ? 'bg-orange-100 text-orange-800' :
+                                'bg-green-100 text-green-800'}">
+                                    ${req.priority}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${req.obligation}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${req.stability}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table></div>`;
+                container.innerHTML = html;
+                lucide.createIcons();
+
+            } catch (error) {
+                console.error("Error loading requirements:", error);
+                container.innerHTML = `<div class="p-4 text-red-600 bg-red-50 rounded-lg border border-red-200">Error loading requirements: ${error.message}</div>`;
+            }
+        }
+
+        // Render Feature Bindings
+        async function renderFeatureBindings(projectData) {
+            console.log("Rendering Feature Bindings...");
+            if (currentFeatureBindings && currentFeatureBindings.length > 0) {
+                renderFeatureBindingsTable();
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/feature-bindings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId
+                    })
+                });
+
+                if (response.ok) {
+                    currentFeatureBindings = await response.json();
+                    renderFeatureBindingsTable();
+                }
+            } catch (e) { console.error("Error loading bindings", e); }
+        }
+
+        // Render Problem Statement
+        async function renderProblemStatement(projectData) {
+            console.log("Rendering Problem Statement...", projectData);
+
+            const loaderHTML = `
+                <div class="flex justify-center items-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                    <span class="ml-3 text-indigo-600 font-medium">Loading Problem Statement...</span>
+                </div>
+            `;
+            const psContainer = document.getElementById('problem_statement_text');
+            if (psContainer && !psContainer.innerText.trim()) psContainer.innerHTML = loaderHTML;
+
+            try {
+                const response = await fetch('/api/problem-statement', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId,
+                        sysmod_project_id: sysmodProjectId
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("Problem Statement:", data);
+                    if (data.body) {
+                        document.getElementById('problem_statement_text').textContent = data.body;
+                        document.getElementById('problem_statement_edit_button').style.display = 'inline-flex';
+                    } else {
+                        document.getElementById('problem_statement_text').textContent = "Problem statement not found in model. Please create a problem statement in your SysML v2 modeling tool.";
+                        document.getElementById('problem_statement_edit_button').style.display = 'none';
+                    }
+                }
+            } catch (e) {
+                console.error("Error fetching problem statement:", e);
+                document.getElementById('problem_statement_text').textContent = "Error loading data.";
+            }
+        }
+
+        // Render System Idea
+        async function renderSystemIdea(projectData) {
+            console.log("Rendering System Idea...", projectData);
+
+            const loaderHTML = `
+                <div class="flex justify-center items-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                    <span class="ml-3 text-indigo-600 font-medium">Loading System Idea...</span>
+                </div>
+            `;
+            const ideaContainer = document.getElementById('system_idea_text');
+            if (ideaContainer && !ideaContainer.innerText.trim()) ideaContainer.innerHTML = loaderHTML;
+
+            try {
+                const responseIdea = await fetch('/api/system-idea', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId,
+                        sysmod_project_id: sysmodProjectId
+                    })
+                });
+
+                if (responseIdea.ok) {
+                    const ideaDoc = await responseIdea.json();
+                    console.log("System Idea Doc:", ideaDoc);
+                    if (ideaDoc) {
+                        document.getElementById('system_idea_text').textContent = ideaDoc.body;
+                    } else {
+                        document.getElementById('system_idea_text').textContent = "System Idea not defined.";
+                    }
+                }
+            } catch (e) {
+                console.error("Error fetching system idea:", e);
+                document.getElementById('system_idea_text').textContent = "Error loading data.";
+            }
+        }
+
+        // Kept for compatibility if used elsewhere, or as a coordinator
+        async function renderVision(projectData) {
+            await renderProblemStatement(projectData);
+            await renderSystemIdea(projectData);
+        }
+
+        function renderContext(data) { console.log("Rendering Context...", data); }
+        // Render Use Cases
+        async function renderUseCases(projectData) {
+            console.log("Rendering Use Cases...");
+            const container = document.getElementById('usecases_section');
+
+            try {
+                const response = await fetch('/api/sysmod-usecases', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId,
+                        sysmod_project_id: sysmodProjectId
+                    })
+                });
+
+                if (!response.ok) throw new Error("Failed to fetch use cases");
+
+                const usecases = await response.json();
+
+                // Build Cards Grid
+                let html = `
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="book-open" class="w-6 h-6 text-brand-blue"></i>
+                            Use Cases
+                        </h2>
+                        <span class="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">${usecases.length} Items</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                `;
+
+                usecases.forEach(uc => {
+                    const actorsHtml = uc.actors.map(actor =>
+                        `<span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-indigo-100 text-indigo-700">
+                            <i data-lucide="user" class="w-3 h-3 mr-1"></i> ${actor}
+                         </span>`
+                    ).join('');
+
+                    html += `
+                        <div class="group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-brand-blue opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div class="p-6">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="p-2 bg-blue-50 rounded-lg text-brand-blue">
+                                        <i data-lucide="file-text" class="w-6 h-6"></i>
+                                    </div>
+                                </div>
+                                <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-brand-blue transition-colors">${uc.name}</h3>
+                                <p class="text-slate-600 text-sm mb-4 line-clamp-3">${uc.description}</p>
+                                
+                                <div class="flex flex-wrap gap-2 mt-auto pt-4 border-t border-slate-100">
+                                    ${actorsHtml}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+                container.innerHTML = html;
+                lucide.createIcons();
+
+            } catch (error) {
+                console.error("Error loading use cases:", error);
+
+                // Show Empty State / Error
+                container.innerHTML = `
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="book-open" class="w-6 h-6 text-brand-blue"></i>
+                            Use Cases
+                        </h2>
+                    </div>
+                     <div class="p-8 text-center bg-red-50 rounded-xl border border-red-200">
+                        <i data-lucide="alert-triangle" class="w-12 h-12 text-red-500 mx-auto mb-4"></i>
+                        <h3 class="text-lg font-bold text-red-800 mb-2">Failed to Load Use Cases</h3>
+                        <p class="text-red-600">${error.message}</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+
+        let atlasLoadAll = false;
+
+        function toggleAtlasLoadAll(checked) {
+            console.log("Toggling Atlas Load All:", checked);
+            atlasLoadAll = checked;
+            updateSysmodAtlasStatus();
+        }
+
+        // Update SYSMOD Atlas Status (Bubbles)
+        async function updateSysmodAtlasStatus(projectData) {
+            console.log("Updating SYSMOD Atlas Status...");
+            const loadingOverlay = document.getElementById('loading_overlay');
+
+            // Only show overlay if doing a full load, or maybe always? 
+            // User request implies "When activating loadAll", so let's show it if atlasLoadAll is true.
+            // But even normal load might take a moment. Let's show it always for consistency or check atlasLoadAll.
+            // "When activating loadAll, the loading costs some time".
+            if (atlasLoadAll && loadingOverlay) {
+                loadingOverlay.classList.remove('hidden');
+            }
+
+            try {
+                const response = await fetch('/api/sysmod-atlas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId,
+                        sysmod_project_id: sysmodProjectId,
+                        loadAll: atlasLoadAll
+                    })
+                });
+
+                if (response.ok) {
+                    const status = await response.json();
+                    console.log("SYSMOD Status:", status);
+
+                    // Map server keys (Enums) to Frontend Grid IDs
+                    const keyMap = {
+                        'FEATURE': 'grid_FEATURE',
+                        'BROWNFIELD': 'grid_BFAC',
+                        'STAKEHOLDERS': 'grid_STAKE',
+                        'PROBLEMSTATEMENT': 'grid_PS',
+                        'SYSTEMIDEA': 'grid_SIC',
+                        'SYSTEM': 'grid_SC',
+                        'USECASES': 'grid_UC',
+                        'REQUIREMENTS': 'grid_RE',
+                        'FUNCTIONAL': 'grid_FUC',
+                        'LOGICAL': 'grid_LAC',
+                        'PRODUCT': 'grid_PAC'
+                    };
+
+                    // Update Bubbles
+                    Object.keys(status).forEach(serverKey => {
+                        const gridId = keyMap[serverKey];
+                        if (gridId) {
+                            const el = document.getElementById(gridId);
+                            if (el) {
+                                if (status[serverKey]) {
+                                    // Active (Green)
+                                    el.classList.remove('bg-gray-200');
+                                    el.classList.add('bg-emerald-200', 'border-emerald-500', 'text-emerald-900');
+                                } else {
+                                    // Inactive (Grey)
+                                    el.classList.add('bg-gray-200');
+                                    el.classList.remove('bg-emerald-200', 'border-emerald-500', 'text-emerald-900');
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("Error updating SYSMOD status:", e);
+            } finally {
+                if (loadingOverlay) loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        // Feature Tree (UVL) Renderer Logic
+        async function renderUVL() {
+            const uvlContent = document.getElementById('uvl_input').value;
+            const outputDiv = document.getElementById('uvl_output');
+
+            if (!uvlContent.trim()) {
+                outputDiv.innerHTML = '<p class="text-slate-500 italic">Please enter UVL content.</p>';
+                return;
+            }
+
+            try {
+                const lines = uvlContent.split('\n').filter(line => line.trim() !== '');
+                let graphDefinition = 'graph TD\n';
+                let skipMode = false;
+                let rootFound = false;
+
+                // Context Stack: stores { type: 'feature'|'group', name: string, indent: number, id: string }
+                // 'group' items store the relationship mode (mandatory, optional, etc.)
+                let stack = [];
+
+                lines.forEach((line, index) => {
+                    if (skipMode) return;
+
+                    // Normalize tabs to spaces (4 spaces per tab) to ensure correct indentation calculation
+                    const normalizedLine = line.replace(/\t/g, '    ');
+
+                    // Calculate indentation
+                    const indent = normalizedLine.search(/\S/);
+                    let name = line.trim();
+
+                    // Check for Constraints block
+                    if (name.toLowerCase() === 'constraints') {
+                        skipMode = true;
+                        return;
+                    }
+
+                    // Ignore 'features' root keyword if it appears (common in UVL)
+                    if (name.toLowerCase() === 'features' && !rootFound) {
+                        return;
+                    }
+
+                    // Identify Grouping Keywords
+                    const lowerName = name.toLowerCase();
+                    const isGroup = ['mandatory', 'optional', 'alternative', 'or'].includes(lowerName);
+
+                    // Clean ID for Mermaid
+                    const cleanId = isGroup ? null : name.replace(/[^a-zA-Z0-9_]/g, '_');
+
+                    // Manage Stack: Pop items that are deeper or same level (strictly deeper for groups?)
+                    // Logic: If current indent <= stack top, we popped back up.
+                    while (stack.length > 0 && stack[stack.length - 1].indent >= indent) {
+                        stack.pop();
+                    }
+
+                    if (isGroup) {
+                        // Push Group Context
+                        stack.push({ type: 'group', name: lowerName, indent: indent, id: null });
+                    } else {
+                        // It's a Feature
+
+                        // Find Parent Feature
+                        let parent = null;
+                        let relationType = 'optional'; // Default
+
+                        // Look backwards in stack
+                        for (let i = stack.length - 1; i >= 0; i--) {
+                            if (stack[i].type === 'group') {
+                                relationType = stack[i].name;
+                            } else if (stack[i].type === 'feature') {
+                                parent = stack[i];
+                                break; // Found nearest parent feature
+                            }
+                        }
+
+                        if (parent) {
+                            // Define Edge based on Relation Type
+                            // User specific request: Mandatory = Solid line with black filled circle
+                            // Mermaid 'graph' doesn't support filled circle easily. 
+                            // We use '==>' for Mandatory to distinguish, and '-->' for others.
+                            // Or we uses 'Composition' style 'parent *-- child' if strictly allowed?
+                            // 'graph' allows: -->, ---, -.->, ==>
+                            // We will use ==> for Mandatory to visualize "strength".
+                            if (relationType === 'mandatory') {
+                                graphDefinition += `${parent.id} ==> ${cleanId}["${name}"]\n`;
+                            } else if (relationType === 'optional') {
+                                graphDefinition += `${parent.id} -.-> ${cleanId}["${name}"]\n`;
+                            } else if (relationType === 'alternative' || relationType === 'or') {
+                                graphDefinition += `${parent.id} --> ${cleanId}["${name}"]\n`;
+                            } else {
+                                graphDefinition += `${parent.id} --> ${cleanId}["${name}"]\n`;
+                            }
+                        } else {
+                            // Root Node
+                            graphDefinition += `${cleanId}["${name}"]\n`;
+                            rootFound = true;
+                        }
+
+                        // Push Feature to stack
+                        stack.push({ type: 'feature', name: name, indent: indent, id: cleanId });
+                    }
+                });
+
+                // Style Tweaks
+                // graphDefinition += "classDef default fill:#fff,stroke:#333,stroke-width:1px;\n";
+
+                outputDiv.innerHTML = `<div class="mermaid" style="height: 100%; width: 100%;">${graphDefinition}</div>`;
+                outputDiv.removeAttribute('data-processed'); // Reset for re-render
+
+                if (window.mermaid) {
+                    try {
+                        await window.mermaid.run({ nodes: [outputDiv.querySelector('.mermaid')] });
+
+                        // Initialize Pan Zoom
+                        const svg = outputDiv.querySelector('svg');
+                        if (svg) {
+                            svg.style.maxWidth = 'none';
+                            svg.style.height = '100%';
+                            svg.style.width = '100%';
+                            svg.style.display = 'block';
+
+                            svgPanZoom(svg, {
+                                zoomEnabled: true,
+                                controlIconsEnabled: true,
+                                mouseWheelZoomEnabled: true,
+                                fit: false, // User requested 100% scale
+                                center: true,
+                                minZoom: 0.1,
+                                maxZoom: 10
+                            });
+                        }
+
+                    } catch (e) {
+                        console.error("Mermaid Render Error", e);
+                        outputDiv.innerHTML = `<p class="text-red-500">Error rendering diagram: ${e.message}</p>`;
+                    }
+                }
+
+            } catch (e) {
+                outputDiv.innerHTML = `<p class="text-red-500">Error parsing UVL: ${e.message}</p>`;
+            }
+        }
+
+        // Feature Tree Resizing Logic
+        const resizer = document.getElementById('feature_tree_resizer');
+        const leftPane = document.getElementById('feature_tree_left');
+        const rightPane = document.getElementById('feature_tree_right');
+        const container = document.getElementById('feature_tree_container');
+
+        if (resizer && leftPane && rightPane && container) {
+            let isResizing = false;
+
+            resizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                resizer.classList.add('resizing');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+
+                const containerRect = container.getBoundingClientRect();
+                const containerWidth = containerRect.width;
+                const mouseX = e.clientX - containerRect.left;
+
+                // Min width constraints (e.g. 50px)
+                const minWidth = 50;
+                if (mouseX > minWidth && mouseX < containerWidth - minWidth) {
+                    const leftWidthPercent = (mouseX / containerWidth) * 100;
+                    leftPane.style.width = `${leftWidthPercent}%`;
+                    rightPane.style.width = `${100 - leftWidthPercent}%`;
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    resizer.classList.remove('resizing');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+            });
+        }
+
+        // View Persistence Logic
+        function saveViewSettings() {
+            const settings = {};
+            document.querySelectorAll('#settings_drawer input[type="checkbox"]').forEach(cb => {
+                const viewId = cb.getAttribute('data-view-id');
+                if (viewId) {
+                    settings[viewId] = cb.checked;
+                }
+            });
+            // Save AI Keys
+            const apiKey = document.getElementById('open_ai_key')?.value;
+            const orgId = document.getElementById('open_ai_org')?.value;
+            if (apiKey !== undefined) settings['open_ai_key'] = apiKey;
+            if (orgId !== undefined) settings['open_ai_org'] = orgId;
+
+            localStorage.setItem('sysmod_view_settings', JSON.stringify(settings));
+
+            // Re-fetch quality checks as context changed
+            if (typeof fetchQualityChecks === 'function') {
+                fetchQualityChecks();
+            }
+        }
+
+        function loadViewSettings() {
+            const saved = localStorage.getItem('sysmod_view_settings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+
+                    // Load Checkboxes
+                    Object.keys(settings).forEach(key => {
+                        if (key === 'open_ai_key' || key === 'open_ai_org') return; // Skip keys for now
+                        const cb = document.querySelector(`#settings_drawer input[data-view-id="${key}"]`);
+                        if (cb) {
+                            cb.checked = settings[key];
+                            // Trigger 'change' event so existing onchange handlers run
+                            cb.dispatchEvent(new Event('change'));
+                        }
+                    });
+
+                    // Load Keys
+                    if (settings['open_ai_key']) document.getElementById('open_ai_key').value = settings['open_ai_key'];
+                    if (settings['open_ai_org']) document.getElementById('open_ai_org').value = settings['open_ai_org'];
+
+                } catch (e) {
+                    console.error("Failed to load view settings", e);
+                }
+            } else {
+                // Default: ensure toggle logic runs for initially checked items
+                document.querySelectorAll('#settings_drawer input[type="checkbox"]:checked').forEach(cb => {
+                    // cb.dispatchEvent(new Event('change')); // Optional: only if default HTML state mismatch
+                });
+            }
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            loadViewSettings();
+
+            // Attach save listener to all view checkboxes
+            document.querySelectorAll('#settings_drawer input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', saveViewSettings);
+            });
+
+            // Initial fetch of quality checks
+            fetchQualityChecks();
+        });
+
+        // Fetch UVL Data from API
+        async function loadFeatureTreeData() {
+            const textArea = document.getElementById('uvl_input');
+            if (!textArea) return;
+            textArea.value = "Loading...";
+
+            try {
+                const response = await fetch('/api/feature-tree-uvl', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId,
+                        sysmod_project_id: sysmodProjectId
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.uvl_code) {
+                        textArea.value = data.uvl_code.replace(/\\t/g, '\t');
+                        renderUVL(); // Initial render
+                    } else {
+                        textArea.value = "No UVL data found.";
+                    }
+                } else {
+                    textArea.value = "Error loading feature tree data.";
+                }
+            } catch (e) {
+                console.error("Error fetching feature tree:", e);
+                textArea.value = "Connection error.";
+            }
+        }
+
+        /* Helper to get query params */
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        /* Problem Statement Edit Logic */
+        function toggleProblemStatementEdit(isEditing) {
+            const viewMode = document.getElementById('problem_statement_text');
+            const editMode = document.getElementById('problem_statement_edit');
+            const textarea = document.getElementById('problem_statement_input');
+
+            if (isEditing) {
+                // Determine current text
+                let currentText = viewMode.innerText.trim();
+                // Filter out loader text if present
+                if (currentText === "Loading content..." || currentText === "Loading problem statement...") {
+                    currentText = "";
+                }
+
+                textarea.value = currentText;
+                viewMode.classList.add('hidden');
+                editMode.classList.remove('hidden');
+
+                // Focus textarea
+                setTimeout(() => textarea.focus(), 50);
+            } else {
+                viewMode.classList.remove('hidden');
+                editMode.classList.add('hidden');
+            }
+        }
+
+        async function saveProblemStatement() {
+            const viewMode = document.getElementById('problem_statement_text');
+            const textarea = document.getElementById('problem_statement_input');
+            const newText = textarea.value.trim();
+
+            // Visual feedback
+            const saveBtn = document.querySelector('button[onclick="saveProblemStatement()"]');
+            const originalBtnText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i> Saving...';
+            lucide.createIcons();
+            saveBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/problem-statement/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId,
+                        sysmod_project_id: sysmodProjectId,
+                        text: newText
+                    })
+                });
+
+                if (response.ok) {
+                    if (newText) {
+                        viewMode.innerText = newText;
+                    } else {
+                        viewMode.innerText = "Problem statement not found in model.";
+                    }
+                    toggleProblemStatementEdit(false);
+                    // Re-fetch quality checks as content changed
+                    fetchQualityChecks();
+                } else {
+                    alert('Failed to save problem statement.');
+                }
+            } catch (e) {
+                console.error("Error saving problem statement:", e);
+                alert('Error connecting to server.');
+            } finally {
+                // Restore button state
+                saveBtn.innerHTML = originalBtnText;
+                lucide.createIcons();
+                saveBtn.disabled = false;
+            }
+        }
+
+        async function getAISuggestion() {
+            const textarea = document.getElementById('problem_statement_input');
+            const originalText = textarea.value;
+
+            // Simple visual feedback
+            textarea.disabled = true;
+            const btn = document.querySelector('button[onclick="getAISuggestion()"]');
+            const originalBtnContent = btn.innerHTML;
+            btn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i> Thinking...';
+            lucide.createIcons();
+
+            try {
+                const response = await fetch('/api/ai-suggestion_problem_statement', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: originalText,
+                        api_key: document.getElementById('open_ai_key').value,
+                        org_id: document.getElementById('open_ai_org').value,
+                        context: {
+                            project_id: projectId,
+                            sysmod_project_id: sysmodProjectId
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.suggestion) {
+                        textarea.value = data.suggestion;
+                    }
+                } else {
+                    alert("Failed to get AI suggestion.");
+                }
+            } catch (e) {
+                console.error("AI Error", e);
+                alert("Error connecting to AI service.");
+            } finally {
+                textarea.disabled = false;
+                btn.innerHTML = originalBtnContent;
+                lucide.createIcons();
+                textarea.focus();
+            }
+        }
+
+        /* Quality Drawer Logic */
+        async function toggleQualityDrawer() {
+            const drawer = document.getElementById('quality_drawer');
+            const isClosed = drawer.classList.contains('translate-x-full');
+
+            if (isClosed) {
+                drawer.classList.remove('translate-x-full');
+                drawer.classList.add('translate-x-0');
+                await fetchQualityChecks();
+            } else {
+                drawer.classList.add('translate-x-full');
+                drawer.classList.remove('translate-x-0');
+            }
+        }
+
+        async function fetchQualityChecks() {
+            const listContainer = document.getElementById('quality_list');
+            listContainer.innerHTML = '<p class="text-sm text-slate-500 italic text-center py-4">Checking quality...</p>';
+
+            try {
+                // Collect activated views
+                const activatedViews = Array.from(document.querySelectorAll('#settings_drawer input[type="checkbox"]:checked'))
+                    .map(cb => cb.getAttribute('data-view-id'))
+                    .filter(id => id); // Filter out nulls if any
+
+                // Call the API endpoint
+                const response = await fetch('/api/quality-checks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: getQueryParam('server_url'),
+                        project_id: getQueryParam('project_id'),
+                        commit_id: getQueryParam('commit_id'),
+                        sysmod_project_id: getQueryParam('sysmod_project_id'),
+                        activated_views: activatedViews
+                    })
+                });
+
+                if (response.ok) {
+                    const checks = await response.json();
+                    renderQualityChecks(checks);
+                    updateQualityBadge(checks);
+                } else {
+                    listContainer.innerHTML = '<p class="text-sm text-red-500 text-center">Failed to load quality checks.</p>';
+                }
+
+            } catch (error) {
+                console.error("Quality Check Error", error);
+                listContainer.innerHTML = `<p class="text-sm text-red-500 text-center">Error: ${error.message}</p>`;
+            }
+        }
+
+        function updateQualityBadge(checks) {
+            const drawerIcon = document.getElementById('quality_drawer_icon');
+            const failedCount = checks.filter(c => c.status === 'failed').length;
+
+            if (failedCount > 0) {
+                // Update Drawer Icon to Red Alert
+                drawerIcon.setAttribute('data-lucide', 'alert-triangle');
+                drawerIcon.classList.remove('text-emerald-500');
+                drawerIcon.classList.add('text-red-500');
+            } else {
+                // Update Drawer Icon to Green Check
+                drawerIcon.setAttribute('data-lucide', 'check-circle-2');
+                drawerIcon.classList.remove('text-red-500');
+                drawerIcon.classList.add('text-emerald-500');
+            }
+
+            // Re-render icons since we changed the data-lucide attribute
+            lucide.createIcons();
+        }
+
+        function renderQualityChecks(checks) {
+            const listContainer = document.getElementById('quality_list');
+            listContainer.innerHTML = '';
+
+            if (!checks || checks.length === 0) {
+                listContainer.innerHTML = '<p class="text-sm text-slate-500 text-center">No checks available.</p>';
+                return;
+            }
+
+            checks.forEach(check => {
+                const item = document.createElement('div');
+                item.className = 'p-3 rounded-lg border border-slate-200 bg-white hover:shadow-md transition-shadow';
+
+                let severityColor, icon, statusText, statusBg;
+
+                switch (check.status) {
+                    case 'failed':
+                        severityColor = 'text-red-500';
+                        icon = 'alert-triangle';
+                        statusText = 'Failed';
+                        statusBg = 'bg-red-50 text-red-700 border-red-100';
+                        break;
+                    case 'successful':
+                        severityColor = 'text-emerald-500';
+                        icon = 'check-circle-2';
+                        statusText = 'Passed';
+                        statusBg = 'bg-emerald-50 text-emerald-700 border-emerald-100';
+                        break;
+                    case 'not_checked':
+                    default:
+                        severityColor = 'text-slate-400';
+                        icon = 'help-circle';
+                        statusText = 'Not Checked';
+                        statusBg = 'bg-slate-50 text-slate-600 border-slate-100';
+                        break;
+                }
+
+                item.innerHTML = `
+                    <div class="flex items-start gap-2">
+                        <i data-lucide="${icon}" class="w-5 h-5 ${severityColor} mt-0.5 flex-shrink-0"></i>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <h4 class="text-sm font-semibold text-slate-800">${check.title}</h4>
+                                <span class="text-[10px] font-medium px-2 py-0.5 rounded-full border ${statusBg}">${statusText}</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">${check.description}</p>
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+            lucide.createIcons();
+        }
+
+        // Initial fetch to set badge
+        // fetchQualityChecks(); // Moved to DOMContentLoaded in persistence logic
+
+
+        /* Config Modal Logic */
+        function toggleConfigModal() {
+            const modal = document.getElementById('config_modal');
+            modal.classList.toggle('hidden');
+
+            if (!modal.classList.contains('hidden')) {
+                // Populate Context Fields
+                document.getElementById('ctx_server_url').value = serverUrl || 'Not set';
+                document.getElementById('ctx_project_id').value = projectId || 'Not set';
+                document.getElementById('ctx_commit_id').value = commitId || 'Not set';
+                document.getElementById('ctx_sysmod_id').value = sysmodProjectId || 'Not set';
+            }
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function (event) {
+            const modal = document.getElementById('config_modal');
+            if (event.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+
+        // SYSMOD Grid Logic
+        async function fetchSysmodStatus() {
+            try {
+                const response = await fetch('/api/sysmod-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        server_url: serverUrl,
+                        project_id: projectId,
+                        commit_id: commitId,
+                        sysmod_project_id: sysmodProjectId
+                    })
+                });
+
+                if (response.ok) {
+                    const status = await response.json();
+                    updateSysmodGrid(status);
+                }
+            } catch (e) { console.error("Error fetching SYSMOD status", e); }
+        }
+
+        function updateSysmodGrid(status) {
+            Object.keys(status).forEach(key => {
+                const el = document.getElementById(`grid_${key}`);
+                if (el) {
+                    // Remove all status-specific classes first to reset
+                    el.classList.remove(
+                        'bg-green-300', 'border-green-600', 'text-green-900',
+                        'bg-red-200', 'border-red-600', 'text-red-900'
+                    );
+
+                    if (status[key]) {
+                        // Present -> Green
+                        el.classList.remove('bg-gray-200', 'text-slate-700');
+                        el.classList.add('bg-green-300', 'border-green-600', 'text-green-900');
+                    } else {
+                        // Missing -> Grey (Default)
+                        // Ensure defaults are present
+                        if (!el.classList.contains('bg-gray-200')) el.classList.add('bg-gray-200');
+                        if (!el.classList.contains('text-slate-700')) el.classList.add('text-slate-700');
+                    }
+                }
+            });
+        }
+
+        // Register Renderer Safely
+        (function () {
+            if (typeof sectionRenderers !== 'undefined') {
+                sectionRenderers['sysmod_grid_section'] = fetchSysmodStatus;
+            } else {
+                console.log("Waiting for sectionRenderers...");
+                setTimeout(() => {
+                    if (typeof sectionRenderers !== 'undefined') {
+                        sectionRenderers['sysmod_grid_section'] = fetchSysmodStatus;
+                    }
+                }, 500);
+            }
+        })();
+
+        // Grid Interaction Handler (Drag & Click)
+        function initDraggableGrid() {
+            const draggables = document.querySelectorAll('.draggable-node');
+
+            draggables.forEach(el => {
+                el.addEventListener('mousedown', startDrag);
+            });
+
+            function startDrag(e) {
+                if (e.button !== 0) return;
+
+                const el = this;
+                const parent = el.parentElement; // Grid cell
+                const startX = e.clientX;
+                const startY = e.clientY;
+
+                // Get initial positions
+                const computedStyle = window.getComputedStyle(el);
+                const startLeft = parseInt(computedStyle.left, 10) || 0;
+                const startTop = parseInt(computedStyle.top, 10) || 0;
+
+                // Calculate Constraints (Parent relative)
+                // Note: This relies on the element being positioned relative/absolute within the parent
+                // and the parent being the positioning context (which is true for absolute, mostly true for relative flex items if we just limit deviation)
+                // But for relative items, 'left' is offset from static position. 
+                // To constrain strictly to the box, we need to know the current visual bounds.
+                // Simplified constraint: visual bounding box must stay within parent bounding box.
+
+                const parentRect = parent.getBoundingClientRect();
+                const elRect = el.getBoundingClientRect();
+
+                const minDx = parentRect.left - elRect.left;
+                const maxDx = parentRect.right - elRect.right;
+                const minDy = parentRect.top - elRect.top;
+                const maxDy = parentRect.bottom - elRect.bottom;
+
+                let isDragging = false;
+
+                function drag(e) {
+                    const rawDx = e.clientX - startX;
+                    const rawDy = e.clientY - startY;
+
+                    // Clamp changes
+                    const dx = Math.max(minDx, Math.min(rawDx, maxDx));
+                    const dy = Math.max(minDy, Math.min(rawDy, maxDy));
+
+                    if (Math.abs(rawDx) > 3 || Math.abs(rawDy) > 3) {
+                        isDragging = true;
+                        el.style.cursor = 'grabbing';
+                    }
+
+                    el.style.left = (startLeft + dx) + 'px';
+                    el.style.top = (startTop + dy) + 'px';
+
+                    drawSysmodArrows();
+                }
+
+                function stopDrag(e) {
+                    document.removeEventListener('mousemove', drag);
+                    document.removeEventListener('mouseup', stopDrag);
+                    el.style.cursor = '';
+
+                    if (!isDragging) {
+                        const sectionId = el.getAttribute('data-section');
+                        if (sectionId) {
+                            activateSection(sectionId);
+                        }
+                    }
+                }
+
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', stopDrag);
+            }
+        }
+
+        // Logic to activate section
+        function activateSection(sectionId) {
+            const checkbox = document.querySelector(`input[onchange*="${sectionId}"]`);
+            if (checkbox) {
+                if (!checkbox.checked) {
+                    checkbox.checked = true;
+                    checkbox.dispatchEvent(new Event('change'));
+                } else {
+                    toggleSection(sectionId);
+                }
+
+                setTimeout(() => {
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 100);
+            }
+        }
+
+        // Draw Arrows Logic
+        function drawSysmodArrows() {
+            const svg = document.getElementById('grid_arrows');
+            if (!svg) return;
+
+            // Clear existing lines (except defs)
+            const defs = svg.querySelector('defs');
+            svg.innerHTML = '';
+            if (defs) svg.appendChild(defs);
+
+            const connections = [
+                { from: 'grid_SC', to: 'grid_SIC' },
+                { from: 'grid_FUC', to: 'grid_SC' },
+                { from: 'grid_LAC', to: 'grid_SC' },
+                { from: 'grid_PAC', to: 'grid_SC' },
+                { from: 'grid_SIC', to: 'grid_BFAC' }
+            ];
+
+            // Helper to get center
+            const getCenter = (id) => {
+                const el = document.getElementById(id);
+                if (!el) return null;
+                const rect = el.getBoundingClientRect();
+                const parentRect = svg.getBoundingClientRect();
+                return {
+                    x: rect.left + rect.width / 2 - parentRect.left,
+                    y: rect.top + rect.height / 2 - parentRect.top,
+                    width: rect.width,
+                    height: rect.height
+                };
+            };
+
+            const createLine = (x1, y1, x2, y2) => {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2);
+                line.setAttribute('stroke', 'black');
+                line.setAttribute('stroke-width', '2');
+                line.setAttribute('marker-end', 'url(#arrowhead)');
+                return line;
+            };
+
+            // Adjust point for Ellipse
+            const getEllipsePoint = (cx, cy, width, height, angle, buffer = 0) => {
+                const a = width / 2;
+                const b = height / 2;
+                // Parametric equation for point on ellipse
+                // Scale buffer effectively - approximate by adding to axis
+                const a_buff = a + buffer;
+                const b_buff = b + buffer;
+
+                // Intersection logic is better: 
+                // x = a*cos(t), y=b*sin(t). 
+                // We have angle from center. This angle corresponds to atan2(y, x).
+                // But in parametric t, tan(theta) = (b/a) * tan(t).
+                // So t = atan2( a*sin(theta), b*cos(theta) ).
+
+                const t = Math.atan2(a * Math.sin(angle), b * Math.cos(angle));
+
+                return {
+                    x: cx + a_buff * Math.cos(t),
+                    y: cy + b_buff * Math.sin(t)
+                };
+            };
+
+            connections.forEach(conn => {
+                const start = getCenter(conn.from);
+                const end = getCenter(conn.to);
+
+                if (start && end) {
+                    const dx = end.x - start.x;
+                    const dy = end.y - start.y;
+                    const angle = Math.atan2(dy, dx);
+
+                    // Start Point (at edge of start element)
+                    const p1 = getEllipsePoint(start.x, start.y, start.width, start.height, angle);
+
+                    // End Point (at edge of end element + arrowhead buffer)
+                    // Angle from end center is opposite (angle + PI)
+                    const p2 = getEllipsePoint(end.x, end.y, end.width, end.height, angle + Math.PI, 10);
+
+                    svg.appendChild(createLine(p1.x, p1.y, p2.x, p2.y));
+                }
+            });
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            console.log("Window loaded. Checking parameters...");
+            console.log("Params:", { serverUrl, projectId, commitId, sysmodProjectId });
+
+            // Validate Parameters and Load
+            if (serverUrl && projectId && commitId && sysmodProjectId) {
+                console.log("Parameters valid. Fetching project data...");
+                fetchProjectData();
+            } else {
+                console.error("Missing URL parameters");
+                document.getElementById('project_name').textContent = "Missing Parameters";
+                document.getElementById('project_description').value = "Please verify the URL contains server_url, project_id, commit_id, and sysmod_project_id.";
+            }
+
+            drawSysmodArrows();
+            initDraggableGrid();
+        });
+        window.addEventListener('resize', drawSysmodArrows);
+        setTimeout(() => {
+            drawSysmodArrows();
+            initDraggableGrid(); // Safety init
+        }, 500);
+
+    </script>
+</body>
+
+<!-- Configuration Modal -->
+<div id="config_modal"
+    class="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in relative">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i data-lucide="settings" class="w-5 h-5 text-brand-blue"></i>
+                App Configuration
+            </h3>
+            <button onclick="toggleConfigModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-4">
+            <!-- Project Context (Read Only) -->
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 mb-4">
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Current Context</h4>
+                <div class="grid grid-cols-1 gap-2">
+                    <div>
+                        <label class="text-[10px] text-slate-400">Server URL</label>
+                        <input type="text" id="ctx_server_url" readonly
+                            class="w-full text-xs bg-transparent border-b border-slate-200 pb-1 text-slate-700 font-mono focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-400">Project ID</label>
+                        <input type="text" id="ctx_project_id" readonly
+                            class="w-full text-xs bg-transparent border-b border-slate-200 pb-1 text-slate-700 font-mono focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-400">Commit ID</label>
+                        <input type="text" id="ctx_commit_id" readonly
+                            class="w-full text-xs bg-transparent border-b border-slate-200 pb-1 text-slate-700 font-mono focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-400">SysMOD Project ID</label>
+                        <input type="text" id="ctx_sysmod_id" readonly
+                            class="w-full text-xs bg-transparent border-b border-slate-200 pb-1 text-slate-700 font-mono focus:outline-none text-ellipsis">
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-indigo-50 rounded-xl border border-indigo-100 mb-4">
+                <p class="text-xs text-indigo-700 leading-relaxed">
+                    <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                    Keys are stored locally in your browser and sent securely to the server with each request.
+                </p>
+            </div>
+
+            <div>
+                <label for="open_ai_key" class="block text-sm font-medium text-slate-700 mb-1">OpenAI API Key</label>
+                <div class="relative">
+                    <input type="password" id="open_ai_key" onchange="saveViewSettings()"
+                        class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
+                        placeholder="sk-proj-..." spellcheck="false">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="key" class="w-4 h-4 text-slate-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="open_ai_org" class="block text-sm font-medium text-slate-700 mb-1">Organization ID <span
+                        class="text-slate-400 font-normal">(Optional)</span></label>
+                <div class="relative">
+                    <input type="text" id="open_ai_org" onchange="saveViewSettings()"
+                        class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
+                        placeholder="org-..." spellcheck="false">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="building" class="w-4 h-4 text-slate-400"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-slate-100 bg-slate-50 flex justify-end">
+            <button onclick="toggleConfigModal()"
+                class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-lg transition-colors mr-2">Close</button>
+            <button onclick="toggleConfigModal()"
+                class="px-4 py-2 bg-brand-blue hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg shadow-brand-blue/20 transition-all transform hover:-translate-y-0.5">Done</button>
+        </div>
+    </div>
+</div>
+
+</html>

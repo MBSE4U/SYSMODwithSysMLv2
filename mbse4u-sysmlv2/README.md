@@ -1,0 +1,97 @@
+# MBSE4U SysML v2 API Helpers
+
+Generic helper functions for interacting with SysML v2 REST API. This library simplifies the process of querying projects, commits, and traversing the SysML v2 model structure.
+
+## Installation
+
+You can install this package via pip.
+
+### From Source
+```bash
+pip install .
+```
+
+### Editable Mode (Development)
+```bash
+pip install -e .
+```
+
+## Getting Started
+
+Here is a simple example of how to connect to a server and list projects.
+
+```python
+import mbse4u_sysmlv2_api_helpers as api
+
+SERVER_URL = "http://localhost:9000"
+
+try:
+    # Fetch all projects
+    projects = api.get_projects(SERVER_URL)
+    print(f"Found {len(projects)} projects.")
+
+    for p in projects:
+        print(f"- {p.get('name')} (ID: {p.get('@id')})")
+        
+        # Get commits for the first project
+        commits = api.get_commits(SERVER_URL, p['@id'])
+        if commits:
+            latest_commit = commits[-1]
+            print(f"  Latest commit: {latest_commit.get('id')}")
+
+except Exception as e:
+    print(f"Error: {e}")
+```
+
+## API Reference
+
+### Project & Commit Management
+
+- `get_projects(server_url: str, page_size: int = 256) -> List[Dict]`
+  - Fetches and sorts projects from the given server.
+
+- `get_commits(server_url: str, project_id: str) -> List[Dict]`
+  - Retrieves commit history for a specific project.
+
+- `get_commit_url(server_url: str, project_id: str, commit_id: str) -> str`
+  - Helper to constructing the base URL for commit-specific queries.
+
+### Caching
+
+- `load_model_cache(server_url: str, project_id: str, commit_id: str, page_size: int = 256) -> int`
+  - Loads all elements of a commit into an in-memory `ELEMENT_CACHE` to speed up subsequent queries. Returns the number of elements cached.
+
+### Element Retrieval
+
+- `get_element_fromAPI(query_url: str, element_id: str) -> Optional[Dict]`
+  - Fetches a single element by ID, checking the local cache first.
+
+- `get_elements_fromAPI(query_url: str, element_ids: List[str]) -> List[Dict]`
+  - Batch retrieval of elements.
+
+- `get_elements_byKind_fromAPI(server_url: str, project_id: str, commit_id: str, kind: str) -> List[Dict]`
+  - Cached query for all elements of a specific type (e.g., `'PartUsage'`).
+
+- `get_elements_byName_fromAPI(server_url: str, project_id: str, commit_id: str, name: str) -> List[Dict]`
+  - Finds elements by `declaredName`. Includes logic to find elements that redefine a named element.
+
+### Traversal & Structure
+
+- `get_contained_elements(server_url, project_id, commit_id, element_id, kind, elementKind='ownedElement') -> List[Dict]`
+  - Returns children of a specific type.
+
+- `get_recursive_owned_elements(...) -> List[Dict]`
+  - Recursively fetches descendants.
+
+- `check_specialization_hierarchy(query_url, element, super_element_name) -> bool`
+  - Checks if an element inherits from a specific named element (useful for checking compliance with patterns like `systemOfInterest`).
+
+- `find_elements_specializing(query_url, elements, super_element_name) -> List[Dict]`
+  - Filters a list to only include elements that specialize a given supertype.
+
+- `get_feature_value(server_url, project_id, commit_id, element, feature_name) -> Any`
+  - Extracts the value of a feature (attribute) from an element.
+
+## License
+
+Copyright 2025 Tim Weilkiens. Licensed under the Apache License, Version 2.0.
