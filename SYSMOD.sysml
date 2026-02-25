@@ -16,15 +16,18 @@ library package SYSMOD {
      * See the License for the specific language governing permissions and
      * limitations under the License.
      *
-     * Copyright 2025, MBSE4U
+     * Copyright 2026, MBSE4U
      */
     occurrence def Project {
-        doc
-        /* The Project provides the context for the main engineering artifacts and sets cross relationships. */
+        private doc /* The Project provides the context for the engineering artifacts and sets cross relationships. */
         part brownfieldSystemContext : SystemContext;
         part projectStakeholders : Stakeholder [1..*];
-        concern problemStatement {
+        concern problemStatement : ExtendedConcern {
             subject system :> brownfieldSystemContext.soi;
+        }
+        concern stakeholderNeeds : ExtendedConcern {
+            subject theSubject :> brownfieldSystemContext.soi;
+            frame problemStatement;
         }
         part systemIdeaContext :> brownfieldSystemContext {
             part <soi> systemOfInterest :>> soi {
@@ -32,7 +35,7 @@ library package SYSMOD {
             }
         }
         part requirementSystemContext :> systemIdeaContext;
-        requirement systemRequirementSpecification {
+        requirement systemRequirementSpecification : ExtendedRequirement {
             subject system :> requirementSystemContext.soi;
         }
         #RequirementDerivation::derivation connection {
@@ -49,10 +52,14 @@ library package SYSMOD {
         part productContext :> systemContext;
     }
     occurrence projects : Project [*] nonunique;
+
+    //
+    // System Context
+    //
     part def SystemContext {
         doc
-        /* The System Context includes all system actors, the system of interest, 
-         * and the relationships between the actors and the system.
+        /* The SYSMOD System Context includes all system actors, the system of interest, 
+         * the relationships between the actors and the system, as well as the use cases.
          */
         part actors [1..*];
         part <soi> systemOfInterest;
@@ -65,6 +72,10 @@ library package SYSMOD {
         }
     }
     part systemContexts : SystemContext [*] nonunique;
+
+    //
+    // Stakeholder
+    //
     part def Stakeholder {
         doc
         /* SYSMOD-specific definition of the stakeholder concept */
@@ -74,12 +85,13 @@ library package SYSMOD {
         attribute categories : StakeholderCategoryKind [*];
     }
     part stakeholders : Stakeholder [*] nonunique;
+
     enum def PriorityKind :> ScalarValues::Real {
         none = 0.0;
         low = 0.25;
         medium = 0.5;
         high = 0.75;
-        critial = 1.0;
+        critical = 1.0;
     }
     enum def StakeholderCategoryKind {
         expert;
@@ -87,6 +99,10 @@ library package SYSMOD {
         user;
         other;
     }
+
+    //
+    // System Objectives
+    //
     requirement def SystemObjective {
         doc
         /* A goal that the system is aiming for. It does not have to be satisfied, 
@@ -97,11 +113,26 @@ library package SYSMOD {
         attribute priority : PriorityKind default priority.none;
     }
     requirement systemObjectives : SystemObjective [*];
+
+    //
+    // Concerns
+    //
     concern def ExtendedConcern {
         attribute priority : PriorityKind default priority.none;
     }
     concern extendedConcerns : ExtendedConcern [*] nonunique;
 
+    //
+    // Requirements
+    //
+    requirement def ExtendedRequirement :> ExtendedConcern {
+        doc /* The extended requirement adds further features to the requirement model element. 
+             * Typically, you would define your own set of features and not use the SYSMOD set only. */
+        attribute obligation : ObligationKind default obligation.none;
+        attribute stability : StabilityKind default stability.none;
+        attribute motivation : ScalarValues::String;
+    }
+    requirement extendedRequirements : ExtendedRequirement [*] nonunique;
 
     enum def ObligationKind {
         none;
@@ -111,18 +142,14 @@ library package SYSMOD {
 
     enum def StabilityKind {
         none;
-        instable;
+        unstable;
         stable;
     }
 
-    requirement def ExtendedRequirement :> ExtendedConcern {
-        attribute obligation : ObligationKind default obligation.none;
-        attribute stability : StabilityKind default stability.none;
-        attribute motivation : ScalarValues::String;
-    }
-    requirement extendedRequirements : ExtendedRequirement [*] nonunique;
-
-    metadata def <project> ProjectContextMetadata :> Metaobjects::SemanticMetadata {
+    //
+    // Semantic Metadata
+    //
+    metadata def <project> ProjectMetadata :> Metaobjects::SemanticMetadata {
         :>> baseType = projects meta SysML::Systems::OccurrenceUsage;
     }
     metadata def <systemContext> SystemContextMetadata :> Metaobjects::SemanticMetadata {
