@@ -27,9 +27,6 @@ jobs:
       - name: Install sysand
         run: pip install sysand
 
-      - name: Sync sysand
-        run: sysand sync
-
       - name: Build .kpar package
         run: |
           sysand build
