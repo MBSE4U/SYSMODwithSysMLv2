@@ -6,6 +6,12 @@ on:
     tags:
       - "v*"
 
+workflow_dispatch:
+    inputs:
+      reason:
+        required: false
+        default: 'Manual test'
+
 jobs:
   release:
     runs-on: ubuntu-latest
