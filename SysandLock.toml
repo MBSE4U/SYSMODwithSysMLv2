@@ -1,0 +1,12 @@
+lock_version = "0.1"
+
+[[project]]
+checksum = "036a68a2e7d70fe033c42e7febb4f6b1ab8d307c273e5025172473b00623140d"
+
+[project.info]
+name = "sysmod-sysmlv2"
+version = "5.0.0-beta.2"
+usage = []
+
+[[project.source]]
+editable = 'C:\DatenOhneBackup\GitHub\sysmod-sysmlv2'

@@ -1,0 +1,15 @@
+{
+  "name": "sysmod-sysmlv2",
+  "version": "5.0.0-beta.2",
+  "license": "Apache-2.0",
+  "maintainer": [
+      "MBSE4U, Tim Weilkiens <tim@mbse4u.com>"
+  ],
+  "website": "https://mbse4u.com/sysmod",
+  "topic": [
+      "MBSE",
+      "Methodology"
+  ],
+
+  "usage": []
+}
