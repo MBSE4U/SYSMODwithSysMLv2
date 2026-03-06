@@ -6,7 +6,7 @@ on:
     tags:
       - "v*"
 
-workflow_dispatch:
+  workflow_dispatch:
     inputs:
       reason:
         required: false
