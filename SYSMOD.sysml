@@ -19,14 +19,14 @@ library package SYSMOD {
      * Copyright 2026, MBSE4U
      */
     occurrence def Project {
-        private doc /* The Project provides the context for the engineering artifacts and sets cross relationships. */
+        doc /* The Project provides the context for the engineering artifacts and sets cross relationships. */
         part brownfieldSystemContext : SystemContext;
-        part projectStakeholders : Stakeholder [1..*];
-        concern problemStatement : ExtendedConcern {
-            subject system :> brownfieldSystemContext.soi;
+        part projectStakeholders : ExtendedStakeholder [0..*];
+        concern problemStatement {
+            subject brownfieldSystem :> brownfieldSystemContext.soi;
         }
-        concern stakeholderNeeds : ExtendedConcern {
-            subject theSubject :> brownfieldSystemContext.soi;
+        concern stakeholderNeeds {
+            subject brownfieldSystem :> brownfieldSystemContext.soi;
             frame problemStatement;
         }
         part systemIdeaContext :> brownfieldSystemContext {
@@ -34,15 +34,15 @@ library package SYSMOD {
                 satisfy problemStatement;
             }
         }
-        part requirementSystemContext :> systemIdeaContext;
-        requirement systemRequirementSpecification : ExtendedRequirement {
-            subject system :> requirementSystemContext.soi;
+        part requirementsContext :> systemIdeaContext;
+        requirement systemRequirementSpecification {
+            subject requirementsSystem :> requirementsContext.soi;
         }
         #RequirementDerivation::derivation connection {
             end #RequirementDerivation::original ::> problemStatement;
             end #RequirementDerivation::derive ::> systemRequirementSpecification;
         }
-        part systemContext :> requirementSystemContext {
+        part systemContext :> requirementsContext {
             part <soi> systemOfInterest :>> soi {
                 satisfy systemRequirementSpecification;
             }
@@ -61,30 +61,41 @@ library package SYSMOD {
         /* The SYSMOD System Context includes all system actors, the system of interest, 
          * the relationships between the actors and the system, as well as the use cases.
          */
-        part actors [1..*];
-        part <soi> systemOfInterest;
-        connection act2sys [1..*] {
-            end [1] part 'actor' ::> actors;
-            end [1] part soi ::> soi;
+        part actors [1..*] {
+            port actorPort : ActorPort;
         }
+        part <soi> systemOfInterest {
+            port systemPort : SystemPort;
+        }
+        interface act2sys [1..*] : ActorSystemInterface
+            connect actors.actorPort to soi.systemPort;
         use case useCases [0..*] {
-            subject theSubject :> soi;
+            subject soi :> soi;
         }
     }
     part systemContexts : SystemContext [*] nonunique;
 
+    interface def ActorSystemInterface {
+        doc /* Common Interface between actors and the soi. */
+        end [1..*] port actorPort : ActorPort;
+        end [1] port systemPort : SystemPort;
+    }
+    port def ActorPort;
+    port def SystemPort;
+
     //
     // Stakeholder
     //
-    part def Stakeholder {
+    part def ExtendedStakeholder {
         doc
         /* SYSMOD-specific definition of the stakeholder concept */
         attribute risk : PriorityKind;
         attribute effort : PriorityKind;
+        derived attribute priority : ScalarValues::Real = risk * effort;
         attribute contact : ScalarValues::String;
         attribute categories : StakeholderCategoryKind [*];
     }
-    part stakeholders : Stakeholder [*] nonunique;
+    part stakeholders : ExtendedStakeholder [*] nonunique;
 
     enum def PriorityKind :> ScalarValues::Real {
         none = 0.0;
@@ -150,21 +161,21 @@ library package SYSMOD {
     // Semantic Metadata
     //
     metadata def <project> ProjectMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = projects meta SysML::Systems::OccurrenceUsage;
+        :>> baseType = projects meta SysML::OccurrenceUsage;
     }
     metadata def <systemContext> SystemContextMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = systemContexts meta SysML::Systems::PartUsage;
+        :>> baseType = systemContexts meta SysML::PartUsage;
     }
-    metadata def <exStakeholder> StakeholderMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = stakeholders meta SysML::Systems::PartUsage;
+    metadata def <extendedStakeholder> StakeholderMetadata :> Metaobjects::SemanticMetadata {
+        :>> baseType = stakeholders meta SysML::PartUsage;
     }
     metadata def <systemObjective> SystemObjectiveMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = systemObjectives meta SysML::Systems::RequirementUsage;
+        :>> baseType = systemObjectives meta SysML::RequirementUsage;
     }
     metadata def <extendedConcern> ExtendedConcernMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = extendedConcerns meta SysML::Systems::RequirementUsage;
+        :>> baseType = extendedConcerns meta SysML::RequirementUsage;
     }
     metadata def <extendedRequirement> ExtendedRequirementMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = extendedRequirements meta SysML::Systems::RequirementUsage;
+        :>> baseType = extendedRequirements meta SysML::RequirementUsage;
     }
 }
