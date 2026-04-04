@@ -20,10 +20,19 @@ library package SYSMOD {
      */
     occurrence def Project {
         doc /* The Project provides the context for the engineering artifacts and sets cross relationships. */
+        
+        part projectOwner :> projectStakeholders {
+            doc /* The Project Owner is special Stakeholder who is in charge of the Project. */
+            attribute :>> risk default risk.critical;
+            attribute :>> effort default effort.low;
+            attribute :>> categories default (StakeholderCategoryKind::requirementOwner);
+        }
+
         part brownfieldSystemContext : SystemContext;
         part projectStakeholders : ExtendedStakeholder [0..*];
         concern problemStatement {
             subject brownfieldSystem :> brownfieldSystemContext.soi;
+            stakeholder projectOwner :> Project::projectOwner;
         }
         concern stakeholderNeeds {
             subject brownfieldSystem :> brownfieldSystemContext.soi;
@@ -51,7 +60,7 @@ library package SYSMOD {
         part logicalContext :> systemContext;
         part productContext :> systemContext;
     }
-    occurrence projects : Project [*] nonunique;
+    abstract occurrence projects : Project [*] nonunique;
 
     //
     // System Context
@@ -73,7 +82,7 @@ library package SYSMOD {
             subject soi :> soi;
         }
     }
-    part systemContexts : SystemContext [*] nonunique;
+    abstract part systemContexts : SystemContext [*] nonunique;
 
     interface def ActorSystemInterface {
         doc /* Common Interface between actors and the soi. */
@@ -89,15 +98,15 @@ library package SYSMOD {
     part def ExtendedStakeholder {
         doc
         /* SYSMOD-specific definition of the stakeholder concept */
-        attribute risk : PriorityKind;
-        attribute effort : PriorityKind;
+        attribute risk : LevelKind;
+        attribute effort : LevelKind;
         derived attribute priority : ScalarValues::Real = risk * effort;
         attribute contact : ScalarValues::String;
         attribute categories : StakeholderCategoryKind [*];
     }
-    part stakeholders : ExtendedStakeholder [*] nonunique;
+    abstract part stakeholders : ExtendedStakeholder [*] nonunique;
 
-    enum def PriorityKind :> ScalarValues::Real {
+    enum def LevelKind :> ScalarValues::Real {
         none = 0.0;
         low = 0.25;
         medium = 0.5;
@@ -121,17 +130,17 @@ library package SYSMOD {
          * Of course, it may also be satisfied.
          */
 
-        attribute priority : PriorityKind default priority.none;
+        attribute priority : LevelKind default priority.none;
     }
-    requirement systemObjectives : SystemObjective [*];
+    abstract requirement systemObjectives : SystemObjective [*];
 
     //
     // Concerns
     //
     concern def ExtendedConcern {
-        attribute priority : PriorityKind default priority.none;
+        attribute priority : LevelKind default priority.none;
     }
-    concern extendedConcerns : ExtendedConcern [*] nonunique;
+    abstract concern extendedConcerns : ExtendedConcern [*] nonunique;
 
     //
     // Requirements
@@ -143,7 +152,7 @@ library package SYSMOD {
         attribute stability : StabilityKind default stability.none;
         attribute motivation : ScalarValues::String;
     }
-    requirement extendedRequirements : ExtendedRequirement [*] nonunique;
+    abstract requirement extendedRequirements : ExtendedRequirement [*] nonunique;
 
     enum def ObligationKind {
         none;
