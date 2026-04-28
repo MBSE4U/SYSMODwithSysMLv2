@@ -2,7 +2,7 @@ library package SYSMOD {
     doc
     /* Definition of SYSMOD Concepts for SysML v2
      *
-     * Version v5.1alpha 
+     * Version v5.1 
      *
      * Licensed under the Apache License, Version 2.0 (the "License");
      * you may not use this file except in compliance with the License.
@@ -18,52 +18,92 @@ library package SYSMOD {
      *
      * Copyright 2026, MBSE4U
      */
-    occurrence def Project {
-        doc /* The Project provides the context for the engineering artifacts and sets cross relationships. */
-        
-        part projectOwner :> projectStakeholders {
-            doc /* The Project Owner is special Stakeholder who is in charge of the Project. */
-            attribute :>> risk default risk.critical;
-            attribute :>> effort default effort.low;
-            attribute :>> categories default (StakeholderCategoryKind::requirementOwner);
-        }
 
-        part brownfieldSystemContext : SystemContext;
-        part projectStakeholders : ExtendedStakeholder [0..*];
-        concern problemStatement {
+    //
+    // SYSMOD Project which links all the main artifacts together within a shared context.
+    //
+    occurrence def Project {
+        doc
+        /* The Project provides a context for the engineering artifacts used for this specific project and sets cross relationships. */
+        part projectOwner :> projectStakeholders {
+            doc
+            /* The Project Owner is a special Stakeholder who is in charge of the Project. */
+            attribute :>> risk default LevelKind::critical;
+            attribute :>> effort default LevelKind::low;
+            attribute :>> categories default StakeholderCategoryKind::requirementOwner;
+        }
+        part brownfieldSystemContext : SystemContext {
+            doc
+            /* The Brownfield Context includes the system, its subcomponents, and actors that are already identified at the start of the Project. These constraints limit the set of possible solutions. */
+        }
+        part projectStakeholders : ExtendedStakeholder [0..*] {
+            doc
+            /* Stakeholders are individuals and organizations that have an interest in the system. They have needs and are potential sources of system requirements. */
+        }
+        concern problemStatement : ExtendedConcern {
+            doc
+            /* The Problem Statement is an elevator pitch that describes the problem the system of interest is intended to solve. It is based on the Brownfield system. The problem statement does not specify a solution. The project owner is the stakeholder of the problem statement. */
             subject brownfieldSystem :> brownfieldSystemContext.soi;
             stakeholder projectOwner :> Project::projectOwner;
+            attribute :>> priority = LevelKind::critical;
         }
         concern stakeholderNeeds {
+            doc
+            /* The Stakeholder Needs is the root element for stakeholder needs which will be translated into system requirements. The needs are based on the brownfield system and frames the problem statement. */
             subject brownfieldSystem :> brownfieldSystemContext.soi;
             frame problemStatement;
         }
         part systemIdeaContext :> brownfieldSystemContext {
-            part <soi> systemOfInterest :>> soi {
-                satisfy problemStatement;
+            doc
+            /* The system idea context contains the system idea and additional actors, if necessary. It specializes the brownfield system context. */
+            part :>> brownfieldSystemContext::soi {
+                doc
+                /* The system idea is the answer to the problem statement. It is a rough, elevator-pitch-style outline of the system designed to solve the problem. The system idea specializes the brownfield system. */
+                satisfy Project::problemStatement;
             }
         }
-        part requirementsContext :> systemIdeaContext;
+        part specificationContext :> systemIdeaContext {
+            doc
+            /* The specification context includes the actors and the system, along with specific subcomponents, which are defined during the requirements analysis. The specification context is also the owner of the system use cases. The context specializes the system idea. */
+        }
         requirement systemRequirementSpecification {
-            subject requirementsSystem :> requirementsContext.soi;
+            doc
+            /* The System Requirement Specification is the root element for system requirements. They frame the stakeholder needs. */
+            subject specificationSystem :> specificationContext.soi;
+            frame stakeholderNeeds;
         }
-        #RequirementDerivation::derivation connection {
-            end #RequirementDerivation::original ::> problemStatement;
-            end #RequirementDerivation::derive ::> systemRequirementSpecification;
-        }
-        part systemContext :> requirementsContext {
-            part <soi> systemOfInterest :>> soi {
+        part solutionContext :> specificationContext {
+            doc
+            /* The Solution Context specializes the specification context and is the base context for the solution context. */
+            part solutionSystem :>> soi {
+                doc
+                /* The solution system specializes the specification system and is the base system for the solution. It satisfies the system requirements. */
                 satisfy systemRequirementSpecification;
             }
         }
-        part functionalContext :> systemContext;
-        part logicalContext :> systemContext;
-        part productContext :> systemContext;
+        part functionalContext :> solutionContext [0..1] {
+            doc
+            /* The Functional Context is optional and specializes the solution context and provides the context for a fcuntional architecture, for example, developed with the FAS method. */
+            part functionalSystem {
+                doc
+                /* The Functional System is the root element of the functional architecture. It is part of the context in addition to the inherited solution system which may contain non-functional parts but is a reference for the functional architecture, such as owner of the functions. */
+            }
+        }
+        part logicalContext :> solutionContext [0..1] {
+            doc
+            /* The Logical Context is optional and specializes the solution context and provides the context for a logical architecture. */
+        }
+        part productContext :> solutionContext {
+            doc
+            /* The Product Context specializes the solution context and provides the context for a product architecture. */
+        }
+        allocation functional2logical [0..1] allocate functionalContext to logicalContext;
+        allocation logical2product [0..1] allocate logicalContext to productContext;
     }
-    abstract occurrence projects : Project [*] nonunique;
+    abstract occurrence projects : Project [*];
 
     //
-    // System Context
+    // SYSMOD System Context
     //
     part def SystemContext {
         doc
@@ -71,120 +111,159 @@ library package SYSMOD {
          * the relationships between the actors and the system, as well as the use cases.
          */
         part actors [1..*] {
-            port actorPort : ActorPort;
+            doc
+            /* The actors of the system of interest, i.e., all external entities which interact with system including humans, external systems, and environmental effects. */
+            port actorPort : ActorPort {
+                doc
+                /* Dedicated port of an actor to exchange items with the system. */
+            }
         }
         part <soi> systemOfInterest {
-            port systemPort : SystemPort;
+            doc
+            /* Black box system of interest. */
+            port systemPort : SystemPort [*];
         }
-        interface act2sys [1..*] : ActorSystemInterface
-            connect actors.actorPort to soi.systemPort;
+        part <soiImpl> systemOfInterestImplementation :> soi {
+            doc
+            /* White box system of interest. */
+        }
+        interface act2sys : ActorSystemInterface [1..*] connect actors.actorPort to soi.systemPort {
+            doc
+            /* Set of all actor/system interfaces. */
+        }
         use case useCases [0..*] {
-            subject soi :> soi;
+            doc
+            /* Set of all system use cases. */
+            subject soi :> SystemContext::soi;
         }
     }
-    abstract part systemContexts : SystemContext [*] nonunique;
+    abstract part systemContexts : SystemContext [*];
 
     interface def ActorSystemInterface {
-        doc /* Common Interface between actors and the soi. */
+        doc
+        /* Common interface definition for the link between actors and the system of interest. */
         end [1..*] port actorPort : ActorPort;
         end [1] port systemPort : SystemPort;
     }
-    port def ActorPort;
-    port def SystemPort;
+    port def ActorPort {
+        doc
+        /* Base port definition for actor ports. */
+    }
+    port def SystemPort {
+        doc
+        /* Base port definition for system ports. */
+    }
 
     //
-    // Stakeholder
+    // SYSMOD Stakeholder and Requirement Concepts
     //
     part def ExtendedStakeholder {
         doc
-        /* SYSMOD-specific definition of the stakeholder concept */
-        attribute risk : LevelKind;
-        attribute effort : LevelKind;
-        derived attribute priority : ScalarValues::Real = risk * effort;
-        attribute contact : ScalarValues::String;
-        attribute categories : StakeholderCategoryKind [*];
+        /* SYSMOD-specific definition of a stakeholder concept */
+        attribute risk : LevelKind default LevelKind::none {
+            doc
+            /* What is the risk of failure if I ignore this stakeholder? */
+        }
+        attribute effort : LevelKind default LevelKind::none {
+            doc
+            /* How much effort is involved in identifying this stakeholder's concerns and requirements? */
+        }
+        derived attribute priority : ScalarValues::Real = risk * effort {
+            doc
+            /* Priority is the product of risk and effort. */
+        }
+        attribute contact : ScalarValues::String [0..1] {
+            doc
+            /* Contact information of the stakeholder. */
+        }
+        attribute categories : StakeholderCategoryKind [*] {
+            doc
+            /* Stakeholder kinds */
+        }
     }
-    abstract part stakeholders : ExtendedStakeholder [*] nonunique;
+    abstract part stakeholders : ExtendedStakeholder [*];
 
-    enum def LevelKind :> ScalarValues::Real {
-        none = 0.0;
-        low = 0.25;
-        medium = 0.5;
-        high = 0.75;
-        critical = 1.0;
-    }
     enum def StakeholderCategoryKind {
+        doc
+        /* Different kinds of stakeholders. */
         expert;
         requirementOwner;
         user;
         other;
     }
 
-    //
-    // System Objectives
-    //
-    requirement def SystemObjective {
-        doc
-        /* A goal that the system is aiming for. It does not have to be satisfied, 
-         * but an evaluation must show that the system has brought the objective closer. 
-         * Of course, it may also be satisfied.
-         */
-
-        attribute priority : LevelKind default priority.none;
-    }
-    abstract requirement systemObjectives : SystemObjective [*];
-
-    //
-    // Concerns
-    //
     concern def ExtendedConcern {
-        attribute priority : LevelKind default priority.none;
+        /* Base element for concerns. */
+        attribute priority : LevelKind default LevelKind::none;
     }
-    abstract concern extendedConcerns : ExtendedConcern [*] nonunique;
+    abstract concern extendedConcerns : ExtendedConcern [*];
 
-    //
-    // Requirements
-    //
     requirement def ExtendedRequirement :> ExtendedConcern {
-        doc /* The extended requirement adds further features to the requirement model element. 
-             * Typically, you would define your own set of features and not use the SYSMOD set only. */
-        attribute obligation : ObligationKind default obligation.none;
-        attribute stability : StabilityKind default stability.none;
+        doc
+        /* The extended requirement adds further features to the requirement model element. 
+         * Typically, you would define your own set of features and not use the SYSMOD set only.
+         */
+        attribute obligation : ObligationKind default ObligationKind::none;
+        attribute stability : StabilityKind default StabilityKind::none;
         attribute motivation : ScalarValues::String;
     }
-    abstract requirement extendedRequirements : ExtendedRequirement [*] nonunique;
+    abstract requirement extendedRequirements : ExtendedRequirement [*];
 
     enum def ObligationKind {
+        doc
+        /* Enumeration for different kinds of obligations. */
         none;
         mandatory;
         optional;
     }
-
     enum def StabilityKind {
+        doc
+        /* Enumeration for stability kinds. */
         none;
         unstable;
         stable;
     }
 
     //
+    // Common Concepts
+    //
+    enum def LevelKind :> ScalarValues::Real {
+        doc
+        /* Common enumeration of levels with real values, for example, for priority calculations. */
+        none = 0.0;
+        low = 0.25;
+        medium = 0.5;
+        high = 0.75;
+        critical = 1.0;
+    }
+
+    //
     // Semantic Metadata
     //
     metadata def <project> ProjectMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = projects meta SysML::OccurrenceUsage;
+        :>> baseType = projects meta SysML::Type;
+        :> annotatedElement : SysML::OccurrenceDefinition;
+        :> annotatedElement : SysML::OccurrenceUsage;
     }
     metadata def <systemContext> SystemContextMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = systemContexts meta SysML::PartUsage;
+        :>> baseType = systemContexts meta SysML::Type;
+        :> annotatedElement : SysML::PartDefinition;
+        :> annotatedElement : SysML::PartUsage;
     }
     metadata def <extendedStakeholder> StakeholderMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = stakeholders meta SysML::PartUsage;
-    }
-    metadata def <systemObjective> SystemObjectiveMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = systemObjectives meta SysML::RequirementUsage;
+        :>> baseType = stakeholders meta SysML::Type;
+        :> annotatedElement : SysML::PartDefinition;
+        :> annotatedElement : SysML::PartUsage;
     }
     metadata def <extendedConcern> ExtendedConcernMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = extendedConcerns meta SysML::RequirementUsage;
+        :>> baseType = extendedConcerns meta SysML::Type;
+        :> annotatedElement : SysML::ConcernDefinition;
+        :> annotatedElement : SysML::ConcernUsage;
     }
-    metadata def <extendedRequirement> ExtendedRequirementMetadata :> Metaobjects::SemanticMetadata {
-        :>> baseType = extendedRequirements meta SysML::RequirementUsage;
+    metadata def <extendedRequirement> ExtendedRequirementMetadata
+        :> Metaobjects::SemanticMetadata {
+        :>> baseType = extendedRequirements meta SysML::Type;
+        :> annotatedElement : SysML::RequirementDefinition;
+        :> annotatedElement : SysML::RequirementUsage;
     }
 }
