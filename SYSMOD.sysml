@@ -25,6 +25,9 @@ library package SYSMOD {
     occurrence def Project {
         doc
         /* The Project provides a context for the engineering artifacts used for this specific project and sets cross relationships. */
+
+        occurrence subProjects : Project [*];
+
         part projectOwner :> projectStakeholders {
             doc
             /* The Project Owner is a special Stakeholder who is in charge of the Project. */
@@ -32,7 +35,7 @@ library package SYSMOD {
             attribute :>> effort default LevelKind::low;
             attribute :>> categories default StakeholderCategoryKind::requirementOwner;
         }
-        part brownfieldSystemContext : SystemContext {
+        part brownfieldContext : SystemContext {
             doc
             /* The Brownfield Context includes the system, its subcomponents, and actors that are already identified at the start of the Project. These constraints limit the set of possible solutions. */
         }
@@ -43,20 +46,21 @@ library package SYSMOD {
         concern problemStatement : ExtendedConcern {
             doc
             /* The Problem Statement is an elevator pitch that describes the problem the system of interest is intended to solve. It is based on the Brownfield system. The problem statement does not specify a solution. The project owner is the stakeholder of the problem statement. */
-            subject brownfieldSystem :> brownfieldSystemContext.soi;
+            subject brownfieldSystem :> brownfieldContext.soiImpl;
             stakeholder projectOwner :> Project::projectOwner;
             attribute :>> priority = LevelKind::critical;
         }
         concern stakeholderNeeds {
             doc
             /* The Stakeholder Needs is the root element for stakeholder needs which will be translated into system requirements. The needs are based on the brownfield system and frames the problem statement. */
-            subject brownfieldSystem :> brownfieldSystemContext.soi;
+            subject brownfieldSystem :> brownfieldContext.soiImpl;
             frame problemStatement;
         }
-        part systemIdeaContext :> brownfieldSystemContext {
+        part systemIdeaContext :> brownfieldContext {
             doc
             /* The system idea context contains the system idea and additional actors, if necessary. It specializes the brownfield system context. */
-            part :>> brownfieldSystemContext::soi {
+            part <soi> systemIdeaSystem :>> brownfieldContext::soi;
+            part <soiImpl> systemIdeaSystemImpl :>> brownfieldContext::soiImpl :> soi {
                 doc
                 /* The system idea is the answer to the problem statement. It is a rough, elevator-pitch-style outline of the system designed to solve the problem. The system idea specializes the brownfield system. */
                 satisfy Project::problemStatement;
@@ -65,6 +69,8 @@ library package SYSMOD {
         part specificationContext :> systemIdeaContext {
             doc
             /* The specification context includes the actors and the system, along with specific subcomponents, which are defined during the requirements analysis. The specification context is also the owner of the system use cases. The context specializes the system idea. */
+            part <soi> specificationSystem :>> systemIdeaContext::soi;
+            part <soiImpl> specificationSystemImpl :>> systemIdeaContext::soiImpl :> soi;
         }
         requirement systemRequirementSpecification {
             doc
@@ -75,7 +81,8 @@ library package SYSMOD {
         part solutionContext :> specificationContext {
             doc
             /* The Solution Context specializes the specification context and is the base context for the solution context. */
-            part solutionSystem :>> soi {
+            part <soi> solutionSystem :>> specificationContext::soi;
+            part <soiImpl> solutionSystemImpl :>> specificationContext::soiImpl :> soi {
                 doc
                 /* The solution system specializes the specification system and is the base system for the solution. It satisfies the system requirements. */
                 satisfy systemRequirementSpecification;
@@ -121,13 +128,14 @@ library package SYSMOD {
         part <soi> systemOfInterest {
             doc
             /* Black box system of interest. */
-            port systemPort : SystemPort [*];
+            port systemPorts : SystemPort [*];
         }
         part <soiImpl> systemOfInterestImplementation :> soi {
             doc
             /* White box system of interest. */
         }
-        interface act2sys : ActorSystemInterface [1..*] connect actors.actorPort to soi.systemPort {
+        interface act2sys : ActorSystemInterface [1..*]
+            connect actors.actorPort to soi.systemPorts {
             doc
             /* Set of all actor/system interfaces. */
         }
@@ -269,22 +277,30 @@ library package SYSMOD {
             );
         }
 
-        metadata brownfieldSystemContextAI : AI about brownfieldSystemContext {
+        metadata brownfieldContextAI : AI about brownfieldContext {
             create_prompt = "";
             create_questions = "";
         }
 
         metadata problemStatementAI : AI about problemStatement {
             create_prompt =
-                "1. Analyze the provided scenario. If it is forward engineering, identify the problem statement from the given scenario. If it is reverse engineering, identify the problem statement by identifying the problem that is solved by the given system.
-                2. Create a concise elevator-pitch style problem statement text (typically 150-250 words)
-                3. Follow this format: 'How can we...'
-                4. Ensure the problem statement text is based on the brownfieldSystemContext. If the brownfieldSystemContext is not available, create one that is implied by the problem statement text using the AI metadata about the brownfieldSystemContext.
-                5. Ensure that the problem statement does not jump to the solution and describe it in advance.
-                6. Ensure that the stakeholder projectOwner is set by subsetting the corresponding part usage in the project, if given. If it is not available, use the create_prompt of the AI metadata about the projectOwner to create one.
-                7. If it is reverse engineering, create a satisfy relationship between the given system and the problem statement.
-                8. Create the SysML v2 textual notation for the problemStatement.
-                9. If the user asks to insert the problemStatement into the SysML model, find the project and the problemStatement within the project. If no project exists, create one and insert the problemStatement into the project redefining the inherited problemStatement concern usage. If the problemStatement already exists, update it.";
+                "1. Follow the structure between engineering artifacts given by the SYSMOD library.
+                 2. Analyze the provided scenario. If it is forward engineering, identify the problem statement from the given scenario. If it is reverse engineering, identify the problem statement by identifying the problem that is solved by the given system.
+                 3. Create a concise elevator-pitch style problem statement text (typically 150-250 words)
+                 4. Follow this format: 'How can we...'
+                 5. Ensure the problem statement text is based on the brownfieldSystemContext. If the brownfieldSystemContext is not available, create one that is implied by the problem statement text using the AI metadata about the brownfieldSystemContext.
+                 6. Ensure that the problem statement does not jump to the solution and describe it in advance.
+                 7. Ensure that the stakeholder projectOwner is set by subsetting the corresponding part usage in the project, if given. If it is not available, use the create_prompt of the AI metadata about the projectOwner to create one.
+                 8. If it is reverse engineering, create a satisfy relationship between the given system and the problem statement.
+                 9. Create the SysML v2 textual notation for the problemStatement.
+                 10. If the user asks to insert the problemStatement into the SysML model, find the project and the problemStatement within the project. If no project exists, create one and insert the problemStatement into the project redefining the inherited problemStatement concern usage. If the problemStatement already exists, update it.";
+        }
+
+        metadata projectStakeholdersAI : AI about projectStakeholders {
+            create_prompt =
+                "1. Analyze the brownfieldContext and the problemStatement and identify the stakeholders. 
+                2. Create the SysML v2 textual notation for the stakeholder definitions specializing ExtendedStakeholder.
+                3. Identify the risk, effort, and stakeholder categories of each stakeholder.";
         }
     }
 

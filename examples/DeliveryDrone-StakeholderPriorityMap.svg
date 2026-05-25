@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 730" font-family="Arial, Helvetica, sans-serif">
+
+  <!-- Background -->
+  <rect width="980" height="730" fill="white"/>
+
+  <!-- Title -->
+  <text x="490" y="33" text-anchor="middle" font-size="20" font-weight="bold" fill="#1A237E">Stakeholder Priority Map</text>
+  <text x="490" y="53" text-anchor="middle" font-size="13" fill="#666">Remote Delivery Drone Project</text>
+
+  <!-- ============================================================
+       CHART AREA
+       X axis: Effort   — left=130 (none=0.0) .. right=870 (critical=1.0)  width=740
+       Y axis: Risk     — bottom=580 (none=0.0) .. top=80 (critical=1.0)   height=500
+       Tick positions:
+         X: none=130, low=315, medium=500, high=685, critical=870
+         Y: none=580, low=455, medium=330, high=205, critical=80
+       Quadrant dividers at medium: x=500, y=330
+  ============================================================ -->
+
+  <!-- Quadrant background fills -->
+  <rect x="130" y="80"  width="370" height="250" fill="#FFF8E1"/>
+  <rect x="500" y="80"  width="370" height="250" fill="#FFEBEE"/>
+  <rect x="130" y="330" width="370" height="250" fill="#F1F8E9"/>
+  <rect x="500" y="330" width="370" height="250" fill="#E3F2FD"/>
+
+  <!-- Quadrant labels -->
+  <text x="315" y="106" text-anchor="middle" font-size="11" fill="#E65100" font-style="italic">Keep Satisfied</text>
+  <text x="685" y="106" text-anchor="middle" font-size="11" fill="#B71C1C" font-style="italic">Manage Closely</text>
+  <text x="315" y="568" text-anchor="middle" font-size="11" fill="#33691E" font-style="italic">Monitor</text>
+  <text x="685" y="568" text-anchor="middle" font-size="11" fill="#0D47A1" font-style="italic">Keep Informed</text>
+
+  <!-- Chart outer border -->
+  <rect x="130" y="80" width="740" height="500" fill="none" stroke="#BDBDBD" stroke-width="1.5"/>
+
+  <!-- Quadrant divider lines -->
+  <line x1="500" y1="80"  x2="500" y2="580" stroke="#9E9E9E" stroke-width="1.5" stroke-dasharray="8,5"/>
+  <line x1="130" y1="330" x2="870" y2="330" stroke="#9E9E9E" stroke-width="1.5" stroke-dasharray="8,5"/>
+
+  <!-- Inner grid lines at low and high levels -->
+  <line x1="315" y1="80"  x2="315" y2="580" stroke="#EEEEEE" stroke-width="1"/>
+  <line x1="685" y1="80"  x2="685" y2="580" stroke="#EEEEEE" stroke-width="1"/>
+  <line x1="130" y1="455" x2="870" y2="455" stroke="#EEEEEE" stroke-width="1"/>
+  <line x1="130" y1="205" x2="870" y2="205" stroke="#EEEEEE" stroke-width="1"/>
+
+  <!-- ===== X AXIS (Effort) ===== -->
+  <line x1="130" y1="580" x2="870" y2="580" stroke="#424242" stroke-width="2"/>
+  <polygon points="870,575 883,580 870,585" fill="#424242"/>
+
+  <line x1="130" y1="580" x2="130" y2="590" stroke="#424242" stroke-width="1.5"/>
+  <line x1="315" y1="580" x2="315" y2="590" stroke="#424242" stroke-width="1.5"/>
+  <line x1="500" y1="580" x2="500" y2="590" stroke="#424242" stroke-width="1.5"/>
+  <line x1="685" y1="580" x2="685" y2="590" stroke="#424242" stroke-width="1.5"/>
+  <line x1="870" y1="580" x2="870" y2="590" stroke="#424242" stroke-width="1.5"/>
+
+  <text x="130" y="606" text-anchor="middle" font-size="11" fill="#555">none</text>
+  <text x="315" y="606" text-anchor="middle" font-size="11" fill="#555">low</text>
+  <text x="500" y="606" text-anchor="middle" font-size="11" fill="#555">medium</text>
+  <text x="685" y="606" text-anchor="middle" font-size="11" fill="#555">high</text>
+  <text x="870" y="606" text-anchor="middle" font-size="11" fill="#555">critical</text>
+
+  <text x="490" y="636" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">Effort</text>
+
+  <!-- ===== Y AXIS (Risk) ===== -->
+  <line x1="130" y1="580" x2="130" y2="80" stroke="#424242" stroke-width="2"/>
+  <polygon points="125,80 130,67 135,80" fill="#424242"/>
+
+  <line x1="130" y1="580" x2="120" y2="580" stroke="#424242" stroke-width="1.5"/>
+  <line x1="130" y1="455" x2="120" y2="455" stroke="#424242" stroke-width="1.5"/>
+  <line x1="130" y1="330" x2="120" y2="330" stroke="#424242" stroke-width="1.5"/>
+  <line x1="130" y1="205" x2="120" y2="205" stroke="#424242" stroke-width="1.5"/>
+  <line x1="130" y1="80"  x2="120" y2="80"  stroke="#424242" stroke-width="1.5"/>
+
+  <text x="115" y="584" text-anchor="end" font-size="11" fill="#555">none</text>
+  <text x="115" y="459" text-anchor="end" font-size="11" fill="#555">low</text>
+  <text x="115" y="334" text-anchor="end" font-size="11" fill="#555">medium</text>
+  <text x="115" y="209" text-anchor="end" font-size="11" fill="#555">high</text>
+  <text x="115" y="84"  text-anchor="end" font-size="11" fill="#555">critical</text>
+
+  <text x="28" y="330" text-anchor="middle" font-size="14" font-weight="bold" fill="#333" transform="rotate(-90,28,330)">Risk</text>
+
+  <!-- ============================================================
+       STAKEHOLDER SYMBOLS
+       Person icon centered at (0,0):
+         Head:  circle cx=0 cy=-16 r=10
+         Body:  path from shoulders tapering down
+         Label: text at y=+33 (and y=+45 for line 2)
+  ============================================================ -->
+
+  <!-- 1. Project Owner  — effort=low(315), risk=critical(80) — purple -->
+  <g transform="translate(315,80)">
+    <circle cx="0" cy="-16" r="10" fill="#6A1B9A" stroke="white" stroke-width="2"/>
+    <path d="M -12,-5 C -14,7 -10,19 -7,21 L 7,21 C 10,19 14,7 12,-5 Z" fill="#6A1B9A"/>
+    <text x="0" y="33" text-anchor="middle" font-size="10" font-weight="bold" fill="#4A148C">Project Owner</text>
+  </g>
+
+  <!-- 2. Recipient  — effort=medium(500), risk=high(205) — green -->
+  <g transform="translate(500,205)">
+    <circle cx="0" cy="-16" r="10" fill="#2E7D32" stroke="white" stroke-width="2"/>
+    <path d="M -12,-5 C -14,7 -10,19 -7,21 L 7,21 C 10,19 14,7 12,-5 Z" fill="#2E7D32"/>
+    <text x="0" y="33" text-anchor="middle" font-size="10" font-weight="bold" fill="#1B5E20">Recipient</text>
+  </g>
+
+  <!-- 3. Logistics Operator  — effort=high(685), risk=critical(80) — blue — offset left to 655 -->
+  <g transform="translate(655,80)">
+    <circle cx="0" cy="-16" r="10" fill="#1565C0" stroke="white" stroke-width="2"/>
+    <path d="M -12,-5 C -14,7 -10,19 -7,21 L 7,21 C 10,19 14,7 12,-5 Z" fill="#1565C0"/>
+    <text x="0" y="33" text-anchor="middle" font-size="10" font-weight="bold" fill="#0D47A1">Logistics</text>
+    <text x="0" y="45" text-anchor="middle" font-size="10" font-weight="bold" fill="#0D47A1">Operator</text>
+  </g>
+
+  <!-- 4. Regulatory Authority  — effort=high(685), risk=critical(80) — blue — offset right to 715 -->
+  <g transform="translate(715,80)">
+    <circle cx="0" cy="-16" r="10" fill="#1565C0" stroke="white" stroke-width="2"/>
+    <path d="M -12,-5 C -14,7 -10,19 -7,21 L 7,21 C 10,19 14,7 12,-5 Z" fill="#1565C0"/>
+    <text x="0" y="33" text-anchor="middle" font-size="10" font-weight="bold" fill="#0D47A1">Regulatory</text>
+    <text x="0" y="45" text-anchor="middle" font-size="10" font-weight="bold" fill="#0D47A1">Authority</text>
+  </g>
+
+  <!-- 5. Drone Maintenance Engineer  — effort=medium(500), risk=medium(330) — orange — offset up-left to (472,314) -->
+  <g transform="translate(472,314)">
+    <circle cx="0" cy="-16" r="10" fill="#E65100" stroke="white" stroke-width="2"/>
+    <path d="M -12,-5 C -14,7 -10,19 -7,21 L 7,21 C 10,19 14,7 12,-5 Z" fill="#E65100"/>
+    <text x="0" y="33" text-anchor="middle" font-size="10" font-weight="bold" fill="#BF360C">Maintenance</text>
+    <text x="0" y="45" text-anchor="middle" font-size="10" font-weight="bold" fill="#BF360C">Engineer</text>
+  </g>
+
+  <!-- 6. Urban Authority  — effort=high(685), risk=high(205) — blue -->
+  <g transform="translate(685,205)">
+    <circle cx="0" cy="-16" r="10" fill="#1565C0" stroke="white" stroke-width="2"/>
+    <path d="M -12,-5 C -14,7 -10,19 -7,21 L 7,21 C 10,19 14,7 12,-5 Z" fill="#1565C0"/>
+    <text x="0" y="33" text-anchor="middle" font-size="10" font-weight="bold" fill="#0D47A1">Urban</text>
+    <text x="0" y="45" text-anchor="middle" font-size="10" font-weight="bold" fill="#0D47A1">Authority</text>
+  </g>
+
+  <!-- 7. Depot Manager  — effort=medium(500), risk=medium(330) — green — offset down-right to (528,346) -->
+  <g transform="translate(528,346)">
+    <circle cx="0" cy="-16" r="10" fill="#2E7D32" stroke="white" stroke-width="2"/>
+    <path d="M -12,-5 C -14,7 -10,19 -7,21 L 7,21 C 10,19 14,7 12,-5 Z" fill="#2E7D32"/>
+    <text x="0" y="33" text-anchor="middle" font-size="10" font-weight="bold" fill="#1B5E20">Depot</text>
+    <text x="0" y="45" text-anchor="middle" font-size="10" font-weight="bold" fill="#1B5E20">Manager</text>
+  </g>
+
+  <!-- ===== LEGEND ===== -->
+  <rect x="130" y="655" width="740" height="60" rx="6" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="490" y="672" text-anchor="middle" font-size="11" font-weight="bold" fill="#555">Stakeholder Categories</text>
+
+  <!-- Project Owner -->
+  <g transform="translate(168,685)">
+    <circle cx="0" cy="-6" r="6" fill="#6A1B9A" stroke="white" stroke-width="1.5"/>
+    <path d="M -7,-1 C -8,4 -5,9 -4,10 L 4,10 C 5,9 8,4 7,-1 Z" fill="#6A1B9A"/>
+  </g>
+  <text x="180" y="690" font-size="10" fill="#333">Project Owner</text>
+
+  <!-- Requirement Owner -->
+  <g transform="translate(278,685)">
+    <circle cx="0" cy="-6" r="6" fill="#1565C0" stroke="white" stroke-width="1.5"/>
+    <path d="M -7,-1 C -8,4 -5,9 -4,10 L 4,10 C 5,9 8,4 7,-1 Z" fill="#1565C0"/>
+  </g>
+  <text x="290" y="690" font-size="10" fill="#333">Requirement Owner</text>
+
+  <!-- User -->
+  <g transform="translate(418,685)">
+    <circle cx="0" cy="-6" r="6" fill="#2E7D32" stroke="white" stroke-width="1.5"/>
+    <path d="M -7,-1 C -8,4 -5,9 -4,10 L 4,10 C 5,9 8,4 7,-1 Z" fill="#2E7D32"/>
+  </g>
+  <text x="430" y="690" font-size="10" fill="#333">User</text>
+
+  <!-- Expert -->
+  <g transform="translate(492,685)">
+    <circle cx="0" cy="-6" r="6" fill="#E65100" stroke="white" stroke-width="1.5"/>
+    <path d="M -7,-1 C -8,4 -5,9 -4,10 L 4,10 C 5,9 8,4 7,-1 Z" fill="#E65100"/>
+  </g>
+  <text x="504" y="690" font-size="10" fill="#333">Expert</text>
+
+  <!-- Formula note -->
+  <text x="720" y="672" text-anchor="middle" font-size="10" fill="#888" font-style="italic">Priority = risk × effort</text>
+  <text x="720" y="686" text-anchor="middle" font-size="10" fill="#888" font-style="italic">SYSMOD v5.1 · ExtendedStakeholder</text>
+
+</svg>

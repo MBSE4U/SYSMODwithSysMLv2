@@ -12,6 +12,44 @@ package RemoteDeliveryDroneProject {
         part transportVehicle :> actors;
     }
 
+    // --- Stakeholders ---
+
+    part def RecipientStakeholder :> ExtendedStakeholder {
+        attribute :>> risk = LevelKind::high;
+        attribute :>> effort = LevelKind::medium;
+        attribute :>> categories = StakeholderCategoryKind::user;
+    }
+
+    part def LogisticsOperatorStakeholder :> ExtendedStakeholder {
+        attribute :>> risk = LevelKind::critical;
+        attribute :>> effort = LevelKind::high;
+        attribute :>> categories = StakeholderCategoryKind::requirementOwner;
+    }
+
+    part def RegulatoryAuthority :> ExtendedStakeholder {
+        attribute :>> risk = LevelKind::critical;
+        attribute :>> effort = LevelKind::high;
+        attribute :>> categories = StakeholderCategoryKind::requirementOwner;
+    }
+
+    part def DroneMaintenanceEngineer :> ExtendedStakeholder {
+        attribute :>> risk = LevelKind::medium;
+        attribute :>> effort = LevelKind::medium;
+        attribute :>> categories = StakeholderCategoryKind::expert;
+    }
+
+    part def UrbanAuthority :> ExtendedStakeholder {
+        attribute :>> risk = LevelKind::high;
+        attribute :>> effort = LevelKind::high;
+        attribute :>> categories = StakeholderCategoryKind::requirementOwner;
+    }
+
+    part def DepotManager :> ExtendedStakeholder {
+        attribute :>> risk = LevelKind::medium;
+        attribute :>> effort = LevelKind::medium;
+        attribute :>> categories = StakeholderCategoryKind::user;
+    }
+
     // --- Project Owner ---
 
     part def LogisticsProjectOwner :> ExtendedStakeholder {
@@ -23,9 +61,16 @@ package RemoteDeliveryDroneProject {
     // --- Project ---
 
     occurrence def <project> RemoteDeliveryDroneProject :> Project {
-        part :>> brownfieldSystemContext : LastMileLogisticsBrownfieldContext;
+        part :>> brownfieldContext : LastMileLogisticsBrownfieldContext;
 
         part :>> projectOwner : LogisticsProjectOwner;
+
+        part recipient :> projectStakeholders : RecipientStakeholder;
+        part logisticsOperator :> projectStakeholders : LogisticsOperatorStakeholder;
+        part regulatoryAuthority :> projectStakeholders : RegulatoryAuthority;
+        part droneMaintenanceEngineer :> projectStakeholders : DroneMaintenanceEngineer;
+        part urbanAuthority :> projectStakeholders : UrbanAuthority;
+        part depotManager :> projectStakeholders : DepotManager;
 
         concern :>> problemStatement {
             doc
